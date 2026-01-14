@@ -123,6 +123,7 @@ class JobProcessor:
     async def _attempt_send(self, job: NotificationJob) -> None:
         """Одна попытка отправки (без retry-логики)."""
 
+        # Приводим канал к строке, с учётом Enum/str
         channel_str = self._normalize_channel(job.channel)
 
         # 1. Контакты пользователя
@@ -140,35 +141,41 @@ class JobProcessor:
                 f"locale={job.locale} channel={channel_str}"
             )
 
-        # 3. Рендер
+        # 3. Рендер (защита от None в subject)
+        subject_template = template.subject or ""
+        body_template = template.body or ""
+
         try:
-            subject = template.subject.format(**job.data)
-            body = template.body.format(**job.data)
+            subject = subject_template.format(**job.data)
+            body = body_template.format(**job.data)
         except KeyError as exc:
             raise RuntimeError(f"Missing var in template: {exc}") from exc
 
         # 4. Маршрутизация по каналам
-        if job.channel == NotificationChannel.EMAIL:
-            if not contacts.email:
+        if channel_str == NotificationChannel.EMAIL.value:
+            if not getattr(contacts, "email", None):
                 raise RuntimeError("User has no email")
-            await email_sender.send(
-                to=user.email,
-                subject=template.subject,
-                body=rendered_body,
+
+            await self.email_sender.send(
+                to=contacts.email,
+                subject=subject,
+                body=body,
             )
 
-        elif job.channel == NotificationChannel.PUSH:
+        elif channel_str == NotificationChannel.PUSH.value:
             if not getattr(contacts, "push_token", None):
                 raise RuntimeError("User has no push token")
+
             await self.push_sender.send(
                 to=contacts.push_token,
                 subject=subject,
                 body=body,
             )
 
-        elif job.channel == NotificationChannel.WS:
+        elif channel_str == NotificationChannel.WS.value:
             if not getattr(contacts, "ws_session_id", None):
                 raise RuntimeError("User has no ws session id")
+
             await self.ws_sender.send(
                 to=contacts.ws_session_id,
                 subject=subject,
@@ -176,6 +183,5 @@ class JobProcessor:
             )
 
         else:
-            # На всякий случай — если в будущем кто-то запихнет канал,
-            # которого у нас ещё нет реализации.
+            # На будущее, если кто-то пихнёт неизвестный канал
             raise RuntimeError(f"Unsupported channel: {channel_str}")
