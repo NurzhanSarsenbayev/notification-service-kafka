@@ -1,25 +1,19 @@
 FROM python:3.11-slim
 
-# Не писать .pyc, лог выводить сразу
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Немного системных пакетов (на случай, если колёса не подтянутся)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends build-essential && \
     rm -rf /var/lib/apt/lists/*
 
-# Ставим зависимости
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копируем исходники
 COPY src ./src
 
-# Чтобы Python видел пакет notifications
 ENV PYTHONPATH=/app/src
 
-# Точка входа воркера
 CMD ["python", "-m", "notifications.worker.main"]

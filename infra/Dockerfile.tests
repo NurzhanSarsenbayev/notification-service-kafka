@@ -4,20 +4,15 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Базовые утилиты, как в Dockerfile.api
 RUN apt-get update && \
     apt-get install -y --no-install-recommends build-essential && \
     rm -rf /var/lib/apt/lists/*
 
-# Продовые зависимости
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Тестовые зависимости
 RUN pip install --no-cache-dir pytest pytest-asyncio
 
-# Кладём весь проект внутрь (src + tests)
 COPY . .
 
-# По умолчанию можно вообще вот так, но мы всё равно переопределим командой в compose
 CMD ["pytest", "-q", "tests/worker"]

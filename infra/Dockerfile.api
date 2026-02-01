@@ -1,27 +1,21 @@
 FROM python:3.11-slim
 
-    # Не писать .pyc, лог выводить сразу
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Немного системных пакетов (на случай, если колёса не подтянутся)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends build-essential && \
     rm -rf /var/lib/apt/lists/*
 
-# Ставим зависимости
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копируем исходники
 COPY src ./src
 
-# Чтобы Python видел пакет notifications
 ENV PYTHONPATH=/app/src
 
 EXPOSE 8000
 
-# Запуск FastAPI
 CMD ["uvicorn", "notifications.notifications_api.main:app", "--host", "0.0.0.0", "--port", "8000"]

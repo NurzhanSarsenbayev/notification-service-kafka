@@ -1,248 +1,126 @@
-````markdown
-# 📬 Notification Service — проектное задание 10-го спринта
+# Notification Delivery Service
 
-Репозиторий: **notifications_sprint_1**  
-Стек: **Python 3.11, FastAPI, Kafka, Postgres, asyncpg, aiokafka, Docker, pytest**
+Fault-tolerant notification delivery service built around Kafka with idempotent processing,
+explicit retry semantics, and dead-letter handling.
 
-Сервис нотификаций — централизованный компонент онлайн-кинотеатра.  
-Он принимает события от других сервисов, формирует задания на отправку уведомлений
-(`NotificationJob`) и передаёт их в очередь для дальнейшей обработки воркером.
-
-> ⚠️ В этом MVP **полностью реализован один сквозной сценарий**:  
-> *welcome-email при регистрации пользователя (`user_registered`).*  
-> Остальные сценарии и компоненты явно отмечены как **TODO**.
+This project demonstrates how to reliably deliver notifications in a distributed backend system
+without message loss, duplicate deliveries, or hidden failures.
 
 ---
 
-## 1. 🏗 Общая архитектура
+## Problem
 
-Архитектура строится по паттерну **API → очередь → worker**.
+Notification delivery looks simple until you consider real-world constraints:
 
-```text
-[Auth / Content / другие сервисы]
-               |
-               | HTTP POST /api/v1/events (Event)
-               v
-       +------------------------+
-       |   Notification API     |
-       |  (FastAPI, async)      |
-       +------------------------+
-               |
-               | Kafka (notifications.outbox)
-               v
-       +------------------------+
-       |   Notification Worker  |
-       |  (aiokafka, asyncpg)   |
-       +------------------------+
-               |
-     +---------+----------------------+
-     |         |                      |
- [EmailSender] [PushSender]*   [WsSender]*   (*зарезервировано)
-               |
-           Postgres
-        (notification_delivery,
-             templates)
-````
+- messages can be delivered more than once
+- workers can crash mid-processing
+- downstream providers can fail temporarily or permanently
+- retries can cause duplicates
+- failures must be observable and debuggable
 
-**Kafka:**
-
-* `notifications.outbox` — основная очередь `NotificationJob`
-* `notifications.dlq` — Dead Letter Queue для окончательно упавших задач
-
-> Топика `notifications.retry` **нет** — retry реализован внутри воркера.
+A naive "send notification" approach quickly leads to data inconsistencies and lost events.
 
 ---
 
-## 2. 🔧 Компоненты
+## Solution Overview
 
-### 2.1. Notification API (`src/notifications/notifications_api`)
+This service implements a production-inspired notification pipeline with explicit delivery semantics:
 
-**Задача API:**
+- asynchronous processing via Kafka
+- idempotent delivery guarantees
+- retry and backoff for transient failures
+- dead-letter queue (DLQ) for non-recoverable errors
+- separation of API, worker, and scheduler responsibilities
 
-* принимать внешние события (`Event`);
-* маппить их в `NotificationJob`;
-* публиковать job’ы в Kafka (`notifications.outbox`);
-* предоставлять CRUD по шаблонам уведомлений.
-
-API **не занимается отправкой** — он только ставит задачи.
-
-Основные части:
-
-* `main.py` — создание FastAPI-приложения и маршрутов
-* `api/v1/events.py` — эндпоинт `POST /api/v1/events`
-* `api/v1/templates.py` — эндпоинты `/api/v1/templates` (CRUD)
-* `schemas/event.py` — контракты входящих событий (`BaseEvent`, `EventType`, payload’ы)
-* `schemas/template.py` — Pydantic-схемы шаблонов
-* `services/notification_service.py` — маппинг `Event → List[NotificationJob]`
-* `common.kafka.KafkaNotificationJobPublisher` — обёртка над Kafka producer
-
-Поддерживаемые типы событий (MVP):
-
-* `user_registered` — **реализован сквозной сценарий**
-* `new_film_released` — **пока не реализовано → 501 Not Implemented**
-* `campaign_triggered` — **пока не реализовано → 501 Not Implemented**
-
-Подробнее см. `docs/API.md` и `docs/EVENTS.md`.
+The system favors **at-least-once delivery with idempotent handling** over fragile exactly-once guarantees.
 
 ---
 
-### 2.2. Notification Worker (`src/notifications/worker`)
+## Architecture
 
-**Задача воркера:**
+High-level components:
 
-* читать `NotificationJob` из Kafka (`notifications.outbox`);
-* обеспечивать идемпотентность и ограниченный retry;
-* получать данные пользователя по `user_id` (через `AuthClient`);
-* подбирать шаблон по `template_code` / `channel` / `locale`;
-* рендерить сообщение;
-* отправлять по нужному каналу (email/push/ws);
-* сохранять историю доставок в Postgres;
-* при окончательной неудаче слать событие в DLQ (`notifications.dlq`).
+- **API**  
+  Accepts notification jobs and persists them for asynchronous processing.
 
-Основные модули:
+- **Kafka**  
+  Acts as the transport layer between producers and workers.
 
-* `main.py` — запуск воркера, сигналы, graceful shutdown
-* `startup.py` — создание `asyncpg`-пула и Kafka producer’а для DLQ
-* `consumer/kafka_consumer.py` — чтение сообщений из Kafka
-* `processor/job_processor.py` — основной оркестратор обработки `NotificationJob`
-* `processor/retry_engine.py` — retry-цикл
-* `processor/status_writer.py` — запись статусов в `notification_delivery`
-* `processor/timing.py` — обработка `send_after` и `expires_at`
-* `repositories/notification_delivery_repo.py` — работа с таблицей истории доставок
-* `repositories/template_repo.py` — работа с таблицей `templates`
-* `senders/email_sender.py` — отправка email (MVP: логирование)
-* `auth/client.py` — stub-клиент Auth-сервиса, возвращающий фейковые контакты
+- **Worker**  
+  Consumes notification jobs, applies retry logic, ensures idempotency, and performs delivery.
 
-**Retry-логика:**
+- **Delivery State (PostgreSQL)**  
+  Stores delivery attempts and ensures duplicate messages are not re-processed.
 
-* `attempt_with_retries`:
+- **Scheduler**  
+  Periodically scans for pending or retryable jobs.
 
-  * пробует отправить `NotificationJob` до `max_attempts`;
-  * между попытками — `asyncio.sleep(delay)` по `retry_delays_seconds`;
-  * при успехе → статус `SENT`, запись в БД;
-  * при окончательном фейле → статус `FAILED` и публикация в DLQ-топик;
-* идемпотентность обеспечивается таблицей `notification_delivery`:
+- **Mailpit**  
+  Used as a demo delivery sink for local development.
 
-  * `JobProcessor` перед обработкой проверяет, есть ли уже финальный статус для `job_id`.
+An architectural diagram is available in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ---
 
-### 2.3. Общие компоненты (`src/notifications/common`)
+## Delivery Semantics
 
-* `config.Settings` — общие настройки (Kafka, Postgres, retry, DLQ)
-* `schemas/notification_job.py` — `NotificationJob`, `NotificationMeta`
-* `schemas/notification_enums.py` — `NotificationChannel`, `NotificationStatus`, `NotificationPriority`
-* `db` — создание async SQLAlchemy-сессии / asyncpg-пула
-* `kafka` — общий Kafka producer с dummy-режимом для API
+- **Delivery guarantee:** at-least-once
+- **Idempotency:** enforced at the database level
+- **Retries:** enabled for transient failures with bounded attempts
+- **Dead Letter Queue (DLQ):** non-retryable failures are captured with context
+- **Crash safety:** worker restarts do not cause duplicate deliveries
 
----
-
-## 3. ✅ Соответствие чек-листу (честный статус)
-
-### 3.1. Основные пункты
-
-| Пункт чек-листа                                                     | Статус        | Комментарий                                                                                      |
-| ------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------ |
-| **API не занимается рассылкой, только ставит задачи в очередь**     | ✔ Реализовано | `Notification API` публикует `NotificationJob` в Kafka (`notifications.outbox`)                  |
-| **Worker читает очередь и отправляет уведомления**                  | ✔ Реализовано | Kafka consumer → JobProcessor → отправка/логирование → запись в Postgres                         |
-| **Персонифицированные сообщения (подстановка данных пользователя)** | ✔ Реализовано | По `user_id` берутся контакты (stub `AuthClient`), шаблон рендерится через `.format(**job.data)` |
-| **Обработка фиксированных событий (регистрация и т.д.)**            | ✔ Частично    | Полностью реализован `user_registered`, остальные типы помечены как 501 Not Implemented          |
-| **Повторные попытки, защита от падений**                            | ✔ Реализовано | Retry-энжин внутри воркера + DLQ-топик                                                           |
-| **Dead Letter Queue (DLQ)**                                         | ✔ Реализовано | `notifications.dlq`, `DlqPublisher` отправляет туда окончательно упавшие job’ы                   |
-
-### 3.2. Что не реализовано в этом MVP (честно)
-
-| Пункт чек-листа                                                          | Статус     | Комментарий                                                                                                           |
-| ------------------------------------------------------------------------ | ---------- | --------------------------------------------------------------------------------------------------------------------- |
-| **Административная панель для рассылок**                                 | ✖ Нет      | В этом спринте ограничились API-уровнем (шаблоны и события). В качестве future work можно добавить web-UI поверх API. |
-| **CRUD шаблонов в админке**                                              | ✖ Нет (UI) | CRUD реализован как HTTP API (`/api/v1/templates`), но UI-панели для менеджеров нет.                                  |
-| **Отложенные сообщения (через 1-n часов)**                               | ⚙ Частично | Поле `send_after` поддерживается в `NotificationJob`, воркер умеет ждать, но GUI/кампаний пока нет.                   |
-| **Повторяющиеся сообщения (каждую пятницу, НГ и т.п.)**                  | ✖ Нет      | Не реализовано. Может быть добавлено через отдельный scheduler/cron.                                                  |
-| **Отправка одинаковых сообщений всем пользователям (массовая рассылка)** | ✖ Нет      | Архитектурно предполагается через кампании/сегменты, но в этом MVP не реализовано.                                    |
-| **Обработка событий `new_film_released` и `campaign_triggered`**         | ✖ Нет      | Эндпоинт принимает эти типы, но честно отвечает `501 Not Implemented`.                                                |
-| **WebSocket-сервер для мгновенных сообщений**                            | ✖ Нет      | Канал `WS` зарезервирован в коде, но отдельный WS-сервер не реализован.                                               |
-| **Сервис сокращения ссылок**                                             | ✖ Нет      | Можно реализовать как отдельный микросервис, но не входит в объём текущего спринта.                                   |
-| **Выдача пользователю истории его уведомлений (API личного кабинета)**   | ✖ Нет      | История хранится в таблице `notification_delivery`, но отдельного API для фронта нет.                                 |
+These trade-offs are intentional and documented.
 
 ---
 
-## 4. 🚀 Запуск проекта
+## Demo
 
-> Ниже примерный вариант. Подстрой под свой `infra/docker-compose.yml`, если имена сервисов отличаются.
+A complete end-to-end demo is available here:
 
-```bash
-# Сборка образов
-docker compose -f infra/docker-compose.yml build
+👉 [`docs/DEMO.md`](docs/DEMO.md)
 
-# Запуск инфраструктуры (Kafka, Postgres, API, worker)
-docker compose -f infra/docker-compose.yml up -d
+The demo walks through:
+
+1. Starting the local infrastructure
+2. Creating a notification job
+3. Observing delivery via Mailpit
+4. Inspecting delivery state in the database
+5. Triggering retry and DLQ scenarios
+
+The full demo takes ~5 minutes.
+
+---
+
+## Limitations
+
+This project is an MVP focused on delivery semantics:
+
+- single notification channel (email demo)
+- no external provider integrations
+- no exactly-once guarantees (by design)
+- no Kubernetes deployment
+
+These limitations are explicit and intentional.
+
+---
+
+## Tech Stack
+
+- Python 3.11
+- FastAPI
+- Kafka
+- PostgreSQL
+- Docker Compose
+- pytest
+
+---
+
+## Why This Project Exists
+
+This repository is part of a personal portfolio focused on backend and platform engineering.
+The goal is to demonstrate system design decisions, reliability trade-offs, and production-oriented thinking
+rather than feature completeness.
 ```
-
-После старта:
-
-* Notification API доступен по `http://localhost:8000` (или порту из compose)
-* можно проверить `GET /health` и `POST /api/v1/events`
-
----
-
-## 5. 🧪 Тесты
-
-Тесты вынесены в отдельные Docker-сервисы, чтобы их можно было запускать в любой среде (локально / CI).
-
-### 5.1. Тесты воркера
-
-Покрывают:
-
-* `JobProcessor` (happy path)
-* `retry_engine` (ретраи, DLQ)
-* `status_writer` (нормализация каналов, статусы, fallback’и)
-
-Запуск:
-
-```bash
-docker compose -f infra/docker-compose.yml build notifications-worker-tests
-docker compose -f infra/docker-compose.yml run --rm notifications-worker-tests
-```
-
-### 5.2. Тесты API
-
-Покрывают:
-
-* `POST /api/v1/events` — happy-path для `user_registered`
-* `POST /api/v1/templates` — создание шаблона (через фейковый репозиторий, без реальной БД)
-
-Запуск:
-
-```bash
-docker compose -f infra/docker-compose.yml build notifications-api-tests
-docker compose -f infra/docker-compose.yml run --rm notifications-api-tests
-```
-
-Подробнее см. `docs/TEST.md`.
-
----
-
-## 6. 📚 Дополнительная документация
-
-* `docs/ARCHITECTURE.md` — архитектура сервиса (API, Worker, Kafka, Postgres)
-* `docs/EVENTS.md` — формат внешних событий (`Event`)
-* `docs/QUEUE_JOBS.md` — контракты внутренних сообщений (`NotificationJob`)
-* `docs/API.md` — HTTP API Notification API
-* `docs/WORKER.md` — работа Notification Worker
-* `docs/TEST.md` — стратегия тестирования
-
----
-
-## 7. 🧩 Future work (что можно доработать после спринта)
-
-* Админ-панель для рассылок (web-UI поверх существующего API).
-* Реальные интеграции:
-
-  * HTTP-клиент к Auth-сервису вместо stub’а (`AuthClient`).
-  * SMTP / внешние email-провайдеры вместо логирующего `EmailSender`.
-  * Реальный Push/WS-канал.
-* Scheduler для отложенных и повторяющихся сообщений.
-* Сервис сокращения ссылок и интеграция с шаблонами.
-* API для просмотра истории уведомлений пользователем.
 
 ---
