@@ -1,16 +1,11 @@
 
 services:
   notifications-api:
+    env_file:
+      - ../.env
     build:
       context: ..
       dockerfile: ./infra/Dockerfile.api
-    environment:
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-      - DB_HOST=notifications-db
-      - DB_PORT=5432
-      - DB_NAME=notifications
-      - DB_USER=notifications
-      - DB_PASSWORD=notifications
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:
@@ -20,16 +15,11 @@ services:
         condition: service_completed_successfully
 
   notifications-worker:
+    env_file:
+      - ../.env
     build:
       context: ..
       dockerfile: ./infra/Dockerfile.worker
-    environment:
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-      - DB_HOST=notifications-db
-      - DB_PORT=5432
-      - DB_NAME=notifications
-      - DB_USER=notifications
-      - DB_PASSWORD=notifications
     depends_on:
       kafka-init:
         condition: service_completed_successfully
@@ -37,6 +27,8 @@ services:
         condition: service_completed_successfully
 
   notifications-db:
+    env_file:
+      - ../.env
     image: postgres:16
     environment:
       POSTGRES_DB: notifications
@@ -54,23 +46,19 @@ services:
       start_period: 5s
 
   campaign-scheduler:
+    env_file:
+      - ../.env
     build:
       context: ..
       dockerfile: ./infra/Dockerfile.api
     command: [ "python", "-m", "notifications.campaign_scheduler.main" ]
     depends_on:
       - notifications-api
-    environment:
-      - DB_HOST=notifications-db
-      - DB_PORT=5432
-      - DB_NAME=notifications
-      - DB_USER=notifications
-      - DB_PASSWORD=notifications
-      - API_BASE_URL=${API_BASE_URL:-http://notifications-api:8000}
-      - SCHEDULER_POLL_INTERVAL_SECONDS=${SCHEDULER_POLL_INTERVAL_SECONDS:-60}
     restart: unless-stopped
 
   kafka:
+    env_file:
+      - ../.env
     image: apache/kafka:3.8.0
     container_name: kafka
     ports:
@@ -109,35 +97,32 @@ services:
       start_period: 10s
 
   kafka-init:
+    env_file:
+      - ../.env
     build:
       context: ..
       dockerfile: ./infra/Dockerfile.api
     depends_on:
       kafka:
         condition: service_healthy
-    environment:
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
     command: [ "python", "-m", "notifications.kafka_init" ]
     restart: on-failure:3
 
-
   notifications-db-init:
+    env_file:
+      - ../.env
     build:
       context: ..
       dockerfile: ./infra/Dockerfile.api
     depends_on:
       notifications-db:
         condition: service_healthy
-    environment:
-      - DB_HOST=notifications-db
-      - DB_PORT=5432
-      - DB_NAME=notifications
-      - DB_USER=notifications
-      - DB_PASSWORD=notifications
-    command: ["python", "-m", "notifications.db_init" ]
+    command: [ "python", "-m", "notifications.db_init" ]
     restart: "no"
 
   notifications-worker-tests:
+    env_file:
+      - ../.env
     build:
       context: ..
       dockerfile: ./infra/Dockerfile.tests
@@ -147,6 +132,8 @@ services:
       PYTHONPATH: "/app:/app/src"
 
   notifications-api-tests:
+    env_file:
+      - ../.env
     build:
       context: ..
       dockerfile: ./infra/Dockerfile.tests
@@ -156,6 +143,8 @@ services:
       PYTHONPATH: "/app:/app/src"
 
   notifications-campaign-scheduler-tests:
+    env_file:
+      - ../.env
     build:
       context: ..
       dockerfile: ./infra/Dockerfile.tests
@@ -165,6 +154,8 @@ services:
       PYTHONPATH: "/app:/app/src"
 
   mailpit:
+    env_file:
+      - ../.env
     image: axllent/mailpit:v1.20.6
     container_name: mailpit
     ports:
