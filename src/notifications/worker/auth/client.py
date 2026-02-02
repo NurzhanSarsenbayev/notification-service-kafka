@@ -32,12 +32,15 @@ class AuthClient:
         self._settings = settings
 
     async def get_user_contacts(self, user_id: UUID) -> UserContacts:
+        # Demo mode: if AUTH_BASE_URL is empty/unset, do not make HTTP calls.
+        if not self._settings.auth_base_url:
+            return self._fake_contacts(user_id)
+
         url = f"{self._settings.auth_base_url}/api/v1/users/{user_id}"
 
         try:
             async with httpx.AsyncClient(timeout=2.0) as client:
                 resp = await client.get(url)
-                resp.raise_for_status()
                 data = resp.json()
         except Exception as exc:
             # Fallback, чтобы не ломать воркер, если Auth недоступен.

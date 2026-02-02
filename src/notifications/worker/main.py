@@ -22,6 +22,13 @@ logger = logging.getLogger(__name__)
 
 
 async def app() -> None:
+    # Fail-fast: validate critical settings at startup (do not DLQ jobs due to bad config)
+    try:
+        _ = settings.retry_delays_seconds
+    except ValueError:
+        logger.exception("Invalid RETRY_DELAYS_SECONDS_RAW. Worker cannot start.")
+        raise
+
     logger.info(
         "Notification worker app starting with"
         " kafka_bootstrap_servers=%s, outbox_topic=%s, dlq_topic=%s",
