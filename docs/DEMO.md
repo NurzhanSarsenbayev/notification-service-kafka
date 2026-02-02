@@ -89,7 +89,7 @@ Delivery failures are handled as follows:
 
 See retry and failure scenarios in:
 
-* [`docs/TESTS.md`](TESTS.md)
+* [`docs/TESTS.md`](legacy/TESTS.md)
 * [`docs/ARCHITECTURE.md`](ARCHITECTURE.md)
 
 ---

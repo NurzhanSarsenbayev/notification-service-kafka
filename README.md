@@ -1,42 +1,37 @@
-# Notification Delivery Service
+# Notification Service
+
+A production-minded notification service built with FastAPI, Kafka, and PostgreSQL.
 
 Fault-tolerant notification delivery service built around Kafka with idempotent processing,
 explicit retry semantics, and dead-letter handling.
 
-This project demonstrates how to reliably deliver notifications in a distributed backend system
-without message loss, duplicate deliveries, or hidden failures.
-
 ---
 
-## Problem
+## What this service does
 
-Notification delivery looks simple until you consider real-world constraints:
-
-- messages can be delivered more than once
-- workers can crash mid-processing
-- downstream providers can fail temporarily or permanently
-- retries can cause duplicates
-- failures must be observable and debuggable
-
-A naive "send notification" approach quickly leads to data inconsistencies and lost events.
-
----
-
-## Solution Overview
-
-This service implements a production-inspired notification pipeline with explicit delivery semantics:
+This service implements a production-inspired notification pipeline with:
 
 - asynchronous processing via Kafka
-- idempotent delivery guarantees
+- idempotent delivery handling
 - retry and backoff for transient failures
 - dead-letter queue (DLQ) for non-recoverable errors
 - separation of API, worker, and scheduler responsibilities
 
-The system favors **at-least-once delivery with idempotent handling** over fragile exactly-once guarantees.
+---
+
+## Why it exists (problem statement)
+
+This repository is part of a personal portfolio focused on backend and platform engineering.
+The goal is to demonstrate system design decisions, reliability trade-offs, and production-oriented thinking
+rather than feature completeness.
+
+In real-world systems, notification delivery is complicated by retries, worker crashes,
+and unreliable downstream providers. Naive approaches often lead to duplicates,
+lost messages, or silent failures.
 
 ---
 
-## Architecture
+## High-level architecture
 
 High-level components:
 
@@ -62,19 +57,37 @@ An architectural diagram is available in [`docs/ARCHITECTURE.md`](docs/ARCHITECT
 
 ---
 
-## Delivery Semantics
+## Quickstart (local)
 
-- **Delivery guarantee:** at-least-once
-- **Idempotency:** enforced at the database level
-- **Retries:** enabled for transient failures with bounded attempts
-- **Dead Letter Queue (DLQ):** non-retryable failures are captured with context
-- **Crash safety:** worker restarts do not cause duplicate deliveries
+The service is designed to be run locally using Docker Compose.
 
-These trade-offs are intentional and documented.
+### Prerequisites
+
+- Docker
+- Docker Compose
+
+### Run
+
+```bash
+git clone https://github.com/NurzhanSarsenbayev/notifications_sprint_1.git --> change to new link
+cd notifications_sprint_1
+
+cp .env.sample .env
+docker compose infra/docker-compose.yml up --build
+```
+### After startup:
+
+API is available at: http://localhost:8000/docs
+
+Mailpit UI is available at: http://localhost:8025
+
+To verify the full notification flow, follow the demo guide:
+
+👉 docs/DEMO.md
 
 ---
 
-## Demo
+## Demo / How to verify
 
 A complete end-to-end demo is available here:
 
@@ -92,7 +105,27 @@ The full demo takes ~5 minutes.
 
 ---
 
-## Limitations
+## Guarantees and trade-offs
+
+- Delivery guarantee: at-least-once
+- Idempotency: enforced at the database level
+- Retries: enabled for transient failures with bounded attempts
+- Dead Letter Queue (DLQ): captures non-retryable failures with context
+- Crash safety: worker restarts do not cause duplicate side effects
+
+---
+
+## Repository structure
+
+- src/notifications/notifications_api — FastAPI service
+- src/notifications/worker — Kafka consumer and delivery logic
+- src/notifications/campaign_scheduler — periodic job scheduler
+- infra — Docker Compose and infrastructure configuration
+- docs — architecture and operational documentation
+
+---
+
+## Limitations & future work
 
 This project is an MVP focused on delivery semantics:
 
@@ -102,25 +135,5 @@ This project is an MVP focused on delivery semantics:
 - no Kubernetes deployment
 
 These limitations are explicit and intentional.
-
----
-
-## Tech Stack
-
-- Python 3.11
-- FastAPI
-- Kafka
-- PostgreSQL
-- Docker Compose
-- pytest
-
----
-
-## Why This Project Exists
-
-This repository is part of a personal portfolio focused on backend and platform engineering.
-The goal is to demonstrate system design decisions, reliability trade-offs, and production-oriented thinking
-rather than feature completeness.
-```
 
 ---
