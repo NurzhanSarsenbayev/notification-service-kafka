@@ -69,7 +69,7 @@ class NotificationDelivery(Base):
         UniqueConstraint("job_id", name="uq_notification_delivery_job_id"),
     )
 
-    # job_id — PRIMARY KEY, идемпотентность по job_id
+    # job_id is the PRIMARY KEY (idempotency key)
     job_id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),
         primary_key=True,

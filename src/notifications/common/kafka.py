@@ -1,40 +1,39 @@
-"""
-Здесь будут лежать обёртки над Kafka producer/consumer.
+"""Kafka helpers and abstractions shared across components.
 
-Например:
-- функция для создания producer
-- функция для создания consumer
-- базовые настройки сериализации/десериализации JSON-сообщений
-
-Реализацию добавим на этапе подключения Kafka.
+This module provides a publisher used by the API to enqueue NotificationJob messages.
+If Kafka is unavailable, the publisher switches to a degraded mode and logs what would
+have been published instead of crashing the application.
 """
+
 import asyncio
 import json
+import logging
 from typing import Any, Dict, Optional
 
 from aiokafka import AIOKafkaProducer, errors
 
 from notifications.common.config import settings
 
+logger = logging.getLogger(__name__)
+
 
 class KafkaNotificationJobPublisher:
-    """Отправляет NotificationJob в Kafka.
+    """Publishes NotificationJob messages to Kafka.
 
-    Если Kafka недоступна, не валит всё приложение,
-    а работает в деградированном режиме: просто логирует отправки.
+    If Kafka is unavailable on startup, the publisher switches to a degraded mode
+    and logs jobs instead of publishing them.
     """
 
     def __init__(self, bootstrap_servers: str, topic: str) -> None:
         self._bootstrap_servers = bootstrap_servers
         self._topic = topic
         self._producer: Optional[AIOKafkaProducer] = None
-        self._enabled: bool = True  # если старт не удался и мы ушли в dummy
+        self._enabled: bool = True
 
     async def start(self) -> None:
-        """Стартуем продюсер с несколькими попытками.
+        """Start Kafka producer with a bounded retry loop.
 
-        Если Kafka реально недоступна после N попыток — отключаемся и
-        работаем в dummy-режиме.
+        After exhausting retries, switches to degraded mode.
         """
         if self._producer is not None or not self._enabled:
             return
@@ -45,32 +44,32 @@ class KafkaNotificationJobPublisher:
         for attempt in range(1, max_attempts + 1):
             producer = AIOKafkaProducer(
                 bootstrap_servers=self._bootstrap_servers,
-                value_serializer=lambda v:
-                json.dumps(v, default=str).encode("utf-8"),
+                value_serializer=lambda v: json.dumps(v, default=str).encode("utf-8"),
             )
             try:
-                print(
-                    f"[KAFKA] Starting producer"
-                    f" (attempt {attempt}/{max_attempts}) "
-                    f"to {self._bootstrap_servers}"
+                logger.info(
+                    "Starting Kafka producer (attempt %s/%s) bootstrap_servers=%s",
+                    attempt,
+                    max_attempts,
+                    self._bootstrap_servers,
                 )
                 await producer.start()
-            except Exception as exc:
-                # Не уронить всё приложение, если Kafka не поднялась вовремя
-                print(
-                    f"[KAFKA] Failed to start producer on attempt "
-                    f"{attempt}/{max_attempts}: {exc}"
+            except Exception:
+                logger.exception(
+                    "Failed to start Kafka producer (attempt %s/%s) bootstrap_servers=%s",
+                    attempt,
+                    max_attempts,
+                    self._bootstrap_servers,
                 )
                 try:
                     await producer.stop()
                 except Exception:
-                    # если не стартанул, stop() тоже может бросить — игнорируем
-                    pass
+                    logger.exception("Producer stop failed after unsuccessful start")
 
                 if attempt == max_attempts:
-                    print(
-                        "[KAFKA] Giving up starting producer, "
-                        "running in dummy mode"
+                    logger.error(
+                        "Kafka producer is unavailable after %s attempts; switching to degraded mode",
+                        max_attempts,
                     )
                     self._enabled = False
                     self._producer = None
@@ -79,10 +78,9 @@ class KafkaNotificationJobPublisher:
                 await asyncio.sleep(delay_seconds)
                 continue
 
-            # Успешный старт
             self._producer = producer
             self._enabled = True
-            print("[KAFKA] Producer started")
+            logger.info("Kafka producer started bootstrap_servers=%s", self._bootstrap_servers)
             return
 
     async def stop(self) -> None:
@@ -90,26 +88,25 @@ class KafkaNotificationJobPublisher:
             return
         try:
             await self._producer.stop()
-        except Exception as exc:
-            print(f"[KAFKA] Failed to stop producer: {exc}")
+        except Exception:
+            logger.exception("Failed to stop Kafka producer")
         finally:
             self._producer = None
 
     async def publish_job(self, payload: Dict[str, Any]) -> None:
         if not self._enabled or self._producer is None:
-            # Деградирующий режим: просто выводим, что бы отправили
-            print(f"[KAFKA DUMMY] Would publish to {self._topic}: {payload}")
+            logger.info("Kafka degraded mode: would publish topic=%s payload=%s", self._topic, payload)
             return
 
         try:
             await self._producer.send_and_wait(self._topic, payload)
-        except errors.KafkaError as exc:
-            print(f"[KAFKA] Failed to publish message: {exc}")
-        except Exception as exc:
-            print(f"[KAFKA] Unexpected error while publishing: {exc}")
+        except errors.KafkaError:
+            logger.exception("Kafka error while publishing topic=%s", self._topic)
+        except Exception:
+            logger.exception("Unexpected error while publishing topic=%s", self._topic)
 
 
 kafka_publisher = KafkaNotificationJobPublisher(
     bootstrap_servers=settings.kafka_bootstrap_servers,
-    topic=settings.kafka_outbox_topic,  # лучше использовать общий конфиг
+    topic=settings.kafka_outbox_topic,
 )

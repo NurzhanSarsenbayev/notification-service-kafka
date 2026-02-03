@@ -19,7 +19,7 @@ class NotificationDelivery:
 
 
 class NotificationDeliveryRepository:
-    """Работа с таблицей notification_delivery."""
+    """Access to the notification_delivery table."""
 
     def __init__(self, pool: asyncpg.Pool) -> None:
         self._pool = pool
@@ -59,10 +59,9 @@ class NotificationDeliveryRepository:
         error_message: Optional[str],
         sent_at: Optional[datetime],
     ) -> None:
-        """Upsert по job_id: либо создаём запись,
-         либо обновляем статус/попытки.
+        """Upsert by job_id: create a record or update status/attempt counters.
 
-        Критично: channel всегда обязателен и не может быть NULL.
+        Important: channel is always required and must not be NULL.
         """
         query = """
             INSERT INTO notification_delivery (

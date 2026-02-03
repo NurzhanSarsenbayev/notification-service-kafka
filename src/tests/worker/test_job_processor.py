@@ -16,13 +16,13 @@ async def test_job_processor_happy_email(
     job_email,
 ):
     """
-    Happy-path:
-    - нет записи в delivery_repo;
-    - шаблон найден;
-    - AuthClient возвращает email;
-    - EmailSender вызывается;
-    - в БД пишется статус SENT;
-    - DLQ не трогается.
+    Happy path:
+    - no existing record in delivery_repo;
+    - template is found;
+    - AuthClient returns an email;
+    - EmailSender is called;
+    - delivery status SENT is persisted;
+    - DLQ is not used.
     """
 
     auth_client = FakeAuthClient(email="user@example.com")

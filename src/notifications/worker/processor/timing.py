@@ -16,9 +16,8 @@ async def handle_expiration_if_needed(
     existing,
     delivery_repo: NotificationDeliveryRepository,
 ) -> bool:
-    """Проверяет expires_at и при необходимости помечает job как EXPIRED.
-
-    Возвращает True, если job истёк и дальше его обрабатывать не нужно.
+    """
+    Check expires_at and mark the job as EXPIRED when needed.
     """
     if not job.expires_at:
         return False
@@ -44,9 +43,9 @@ async def wait_send_after_if_needed(
     job: NotificationJob,
     max_send_delay_seconds: int,
 ) -> None:
-    """Обрабатывает send_after:
-     ждёт до нужного момента
-      (но не больше max_send_delay)."""
+    """
+    Handle send_after: sleep until due time (bounded by max_send_delay).
+    """
     if not job.send_after:
         return
 

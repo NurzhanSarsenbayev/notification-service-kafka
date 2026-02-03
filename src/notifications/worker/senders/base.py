@@ -3,9 +3,9 @@ from abc import ABC, abstractmethod
 
 
 class BaseSender(ABC):
-    """Абстрактный интерфейс отправки уведомлений."""
+    """Abstract notification sender interface."""
 
     @abstractmethod
     async def send(self, *, to: str, subject: str, body: str) -> None:
-        """Отправить сообщение конкретному пользователю."""
+        """Send a message to a specific user."""
         raise NotImplementedError

@@ -14,7 +14,7 @@ async def main() -> None:
     engine = create_async_engine(settings.db_dsn, echo=True, future=True)
 
     max_attempts = 10
-    delay = 2  # сек между попытками
+    delay = 2
 
     for attempt in range(1, max_attempts + 1):
         try:
@@ -27,7 +27,7 @@ async def main() -> None:
             async with engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
 
-            logger.info("✅ DB schema created successfully")
+            logger.info("DB schema created successfully")
             break
         except OperationalError as e:
             logger.warning(
@@ -37,7 +37,7 @@ async def main() -> None:
                 e,
             )
             if attempt == max_attempts:
-                logger.error("❌ DB init: giving up "
+                logger.error("DB init: giving up "
                              "after %s attempts", max_attempts)
                 raise
             await asyncio.sleep(delay)

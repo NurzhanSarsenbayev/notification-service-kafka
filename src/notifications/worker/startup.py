@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 async def create_db_pool() -> asyncpg.Pool:
-    """Создаём пул к Postgres с простыми ретраями на старте."""
+    """Create a Postgres pool with simple startup retries."""
     max_attempts = 10
     delay_seconds = 1
 
@@ -46,7 +46,7 @@ async def create_db_pool() -> asyncpg.Pool:
 
 
 async def create_kafka_producer() -> AIOKafkaProducer:
-    """Создаём Kafka producer для DLQ с ретраями на старте."""
+    """Create a Kafka producer for DLQ with startup retries."""
     max_attempts = 10
     delay_seconds = 1
 

@@ -26,19 +26,19 @@ logger = logging.getLogger(__name__)
 
 
 def is_campaign_due(campaign: Campaign, now: datetime) -> bool:
-    """Нужно ли запускать кампанию в момент now по её cron.
+    """Determine whether a campaign should run at `now` based on its cron schedule.
 
-    Правила:
-    - если max_runs задан и runs_count >= max_runs → больше не трогаем;
-    - если last_triggered_at = NULL → первая отправка делается сразу;
-    - иначе считаем ближайший запуск по cron от last_triggered_at.
+    Rules:
+    - if max_runs is set and runs_count >= max_runs -> do not run anymore
+    - if last_triggered_at is NULL -> first run happens immediately
+    - otherwise -> compute the next run time from last_triggered_at using cron
     """
     if (campaign.max_runs is not None
             and campaign.runs_count >= campaign.max_runs):
         return False
 
     if campaign.last_triggered_at is None:
-        # первая отправка кампании — сразу
+        # first run: trigger immediately
         return True
 
     base = campaign.last_triggered_at
@@ -62,11 +62,11 @@ def _build_event(
     template_code: str,
     segment_id: str,
 ) -> BaseEvent:
-    """Собрать BaseEvent для события campaign_triggered."""
+    """Build a BaseEvent for the campaign_triggered event."""
     payload = CampaignTriggeredEventPayload(
         campaign_id=campaign_id,
         template_code=template_code,
-        channels=["email"],  # MVP: всегда e-mail
+        channels=["email"],  # MVP: email only
         segment=CampaignTriggeredSegment(segment_id=segment_id),
     )
 
@@ -85,7 +85,7 @@ async def _process_campaign(
     repo: CampaignRepository,
     now: datetime,
 ) -> None:
-    """Обработать одну кампанию в рамках одного тика."""
+    """Process a single campaign within one scheduler tick."""
     if not is_campaign_due(campaign, now):
         logger.debug(
             "Campaign %s is not due yet (cron=%s, last_triggered_at=%s, "
@@ -146,7 +146,7 @@ async def _process_tick(
     client: httpx.AsyncClient,
     poll_interval: int,
 ) -> None:
-    """Один полный тик планировщика: прочитать кампании и обработать их."""
+    """Run one full scheduler tick: load campaigns and process them."""
     now = datetime.now(timezone.utc)
 
     try:
@@ -170,10 +170,10 @@ async def _process_tick(
 
 
 async def run_scheduler() -> None:
-    """Главный цикл планировщика кампаний.
+    """Main scheduler loop.
 
-    - инициализирует ресурсы (DB pool + HTTP client);
-    - крутит бесконечный цикл, вызывая _process_tick().
+    - initializes resources (DB pool + HTTP client)
+    - runs an infinite loop calling _process_tick()
     """
     poll_interval = settings.scheduler_poll_interval_seconds
 

@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class KafkaNotificationConsumer:
-    """Читает NotificationJob из Kafka и передаёт их в JobProcessor."""
+    """Consumes NotificationJob messages from Kafka and passes them to JobProcessor."""
 
     def __init__(
         self,
@@ -74,7 +74,7 @@ class KafkaNotificationConsumer:
             self._consumer = None
 
     async def _handle_message(self, raw_value: bytes) -> None:
-        # 1. JSON-десериализация
+        # 1. JSON deserialization
         try:
             payload: Any = json.loads(raw_value.decode("utf-8"))
         except Exception as exc:
@@ -84,7 +84,7 @@ class KafkaNotificationConsumer:
                 error_message="Invalid JSON in Kafka message")
             return
 
-        # 2. Валидация NotificationJob
+        # 2. NotificationJob validation
         try:
             job = NotificationJob.model_validate(payload)
         except Exception as exc:
@@ -102,7 +102,7 @@ class KafkaNotificationConsumer:
             job.channel,
         )
 
-        # 3. Бизнес-обработка
+        # 3. Business processing
         try:
             await self._processor.handle_job(job)
         except Exception as exc:

@@ -32,7 +32,7 @@ class TemplateRepository:
         return result.scalars().all()
 
     async def find_by_id(self, template_id: UUID) -> Template | None:
-        """Найти шаблон по ID или вернуть None."""
+        """Get a template by ID or return None."""
         stmt = select(Template).where(Template.id == template_id)
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
@@ -43,7 +43,7 @@ class TemplateRepository:
         locale: str,
         channel: NotificationChannel,
     ) -> Template | None:
-        """Найти шаблон по уникальному ключу или вернуть None."""
+        """Get a template by unique key or return None."""
         stmt = select(Template).where(
             Template.template_code == template_code,
             Template.locale == locale,

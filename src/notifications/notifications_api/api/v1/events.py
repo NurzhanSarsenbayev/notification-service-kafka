@@ -13,7 +13,7 @@ router = APIRouter(prefix="/events", tags=["events"])
 @router.post(
     "",
     status_code=status.HTTP_202_ACCEPTED,
-    summary="Приём внешнего события и постановка NotificationJob в очередь",
+    summary="Accept an external event and enqueue notification jobs",
 )
 async def receive_event(
     event: Event,

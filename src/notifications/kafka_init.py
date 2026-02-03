@@ -17,7 +17,7 @@ async def wait_for_kafka(
     attempts: int = 20,
     delay: float = 1.0,
 ) -> None:
-    """Ждём, пока Kafka поднимется и начнёт отвечать на metadata запросы."""
+    """Wait until Kafka is ready and responds to metadata requests."""
     for attempt in range(1, attempts + 1):
         try:
             logger.info(
@@ -55,7 +55,7 @@ async def wait_for_kafka(
 
 
 async def create_topics() -> None:
-    """Создать notifications.outbox и notifications.dlq, если их ещё нет."""
+    """Create outbox and DLQ topics if they do not exist."""
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",

@@ -24,11 +24,11 @@ async def attempt_with_retries(
     delivery_repo: NotificationDeliveryRepository,
     dlq_publisher: DlqPublisher,
 ) -> None:
-    """Глобальный retry-цикл для job'а.
+    """Retry loop for a single job.
 
-    - вызывает attempt_send_fn;
-    - пишет статусы через status_writer;
-    - шлёт job в DLQ при окончательной неудаче.
+    - calls attempt_send_fn
+    - writes statuses via status_writer
+    - publishes to DLQ on final failure
     """
     attempts = existing_attempts
 
@@ -67,7 +67,7 @@ async def attempt_with_retries(
 
 
 def _get_retry_delay(attempts: int, retry_delays: Sequence[float]) -> float:
-    """Выбор задержки по номеру попытки с ограничением по длине списка."""
+    """Select a retry delay for the given attempt number (bounded by the list size)."""
     if not retry_delays:
         return 0.0
     idx = max(0, min(attempts - 1, len(retry_delays) - 1))

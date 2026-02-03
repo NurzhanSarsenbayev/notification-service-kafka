@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 class PushSender(BaseSender):
-    """Отправка push-уведомлений (пока лог)."""
+    """Send push notifications (stub: logs only)."""
 
     async def send(self, *, to: str, subject: str, body: str) -> None:
         if not to:

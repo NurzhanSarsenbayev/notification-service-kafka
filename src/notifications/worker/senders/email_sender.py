@@ -8,7 +8,7 @@ class EmailSender:
         self.sender = sender
 
     async def send(self, to: str, subject: str, body: str) -> None:
-        """Отправляет письмо через локальный SMTP (Mailpit)."""
+        """Send an email via local SMTP (Mailpit)."""
 
         msg = MIMEText(body, "html")
         msg["Subject"] = subject

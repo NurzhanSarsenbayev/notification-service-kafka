@@ -11,7 +11,7 @@ from notifications.db.models import CampaignStatus
 
 @dataclass
 class Campaign:
-    """Упрощённое представление кампании для планировщика."""
+    """Simplified campaign model used by the scheduler."""
 
     id: UUID
     template_code: str
@@ -24,13 +24,13 @@ class Campaign:
 
 
 class CampaignRepository:
-    """Работа с таблицей campaigns через asyncpg."""
+    """Access to the campaigns table via asyncpg."""
 
     def __init__(self, pool: asyncpg.Pool) -> None:
         self._pool = pool
 
     async def get_active_campaigns(self) -> list[Campaign]:
-        """Вернуть все активные кампании (status = ACTIVE)."""
+        """Return all active campaigns (status = ACTIVE)."""
         query = """
             SELECT
                 id,
@@ -64,14 +64,11 @@ class CampaignRepository:
         ]
 
     async def mark_campaign_triggered(self, campaign_id: UUID) -> None:
-        """Обновить last_triggered_at / runs_count и,
-         при необходимости, сделать кампанию INACTIVE.
+        """Update last_triggered_at / runs_count and optionally deactivate the campaign.
 
-        Логика:
-        - last_triggered_at = NOW()
-        - runs_count = runs_count + 1
-        - если max_runs не NULL и мы достигли лимита → status = INACTIVE
-        - иначе status = ACTIVE
+        Rules:
+        - if max_runs is not NULL and the limit is reached -> status = INACTIVE
+        - otherwise -> status = ACTIVE
         """
         query = """
             UPDATE campaigns

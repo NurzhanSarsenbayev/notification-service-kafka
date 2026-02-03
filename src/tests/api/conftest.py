@@ -6,7 +6,6 @@ from sqlalchemy.exc import IntegrityError
 
 from src.notifications.notifications_api.main import app
 
-# ВАЖНО: импорт без "src.", как в templates.py
 from notifications.notifications_api.utils.dependencies import (
     get_template_repository,
     get_notification_service,
@@ -19,20 +18,19 @@ from notifications.notifications_api.schemas.template import (
 
 
 class FakeTemplateRepo:
-    """Фейковый репозиторий шаблонов для API-тестов (без БД)."""
+    """Fake template repository for API tests (no DB)."""
 
     def __init__(self) -> None:
         self._items: list[TemplateRead] = []
 
     async def create(self, template_in: TemplateCreate) -> TemplateRead:
-        # 👇 проверяем уникальность по (template_code, locale, channel)
         for existing in self._items:
             if (
                 existing.template_code == template_in.template_code
                 and existing.locale == template_in.locale
                 and existing.channel == template_in.channel
             ):
-                # Эмулируем поведение БД с уникальным индексом
+                # Emulate DB behavior with a unique constraint
                 raise IntegrityError("duplicate template", params=None, orig=None)
 
         tpl = TemplateRead(

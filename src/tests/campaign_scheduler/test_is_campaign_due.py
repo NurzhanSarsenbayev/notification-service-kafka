@@ -10,10 +10,10 @@ from src.notifications.campaign_scheduler.repositories.campaigns_repo import (
 def _campaign(**kwargs) -> Campaign:
     now = datetime.now(timezone.utc)
     defaults = dict(
-        id=UUID("11111111-1111-1111-1111-111111111111"),  # или строка, если у тебя id=str
-        template_code="test_template",                    # 👈 добавили
-        segment_id="test_segment",                        # 👈 добавили
-        schedule_cron="* * * * *",  # каждую минуту
+        id=UUID("11111111-1111-1111-1111-111111111111"),
+        template_code="test_template",
+        segment_id="test_segment",
+        schedule_cron="* * * * *",
         status="ACTIVE",
         last_triggered_at=None,
         runs_count=0,
@@ -39,7 +39,7 @@ def test_not_due_when_max_runs_reached():
 
 def test_due_after_cron_interval():
     now = datetime.now(timezone.utc)
-    # last_triggered_at — минута назад, cron="* * * * *" → пора запускать
+    # last_triggered_at is one minute ago, cron="* * * * *" -> due
     c = _campaign(last_triggered_at=now - timedelta(minutes=1))
 
     assert is_campaign_due(c, now) is True
@@ -47,7 +47,7 @@ def test_due_after_cron_interval():
 
 def test_not_due_before_next_cron():
     now = datetime.now(timezone.utc)
-    # last_triggered_at — 10 секунд назад, cron="* * * * *" → ещё рано
+    # last_triggered_at is 10 seconds ago, cron="* * * * *" -> not due yet
     c = _campaign(last_triggered_at=now - timedelta(seconds=10))
 
     assert is_campaign_due(c, now) is False

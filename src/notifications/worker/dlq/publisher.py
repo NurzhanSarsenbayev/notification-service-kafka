@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class DlqPublisher:
-    """Публикация сообщений в DLQ-топик."""
+    """Publish messages to the DLQ topic."""
 
     def __init__(self, settings: Settings, producer: AIOKafkaProducer) -> None:
         self._settings = settings

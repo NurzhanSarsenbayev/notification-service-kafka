@@ -22,5 +22,5 @@ def get_template_repository(
 
 
 def get_notification_service() -> NotificationService:
-    # publisher глобальный, мы его стартуем/стопаем в lifespan
+    # publisher is global; it is started/stopped in the lifespan hook
     return NotificationService(job_publisher=kafka_publisher)

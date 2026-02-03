@@ -29,7 +29,6 @@ def test_ensure_channel_missing_channel_attr():
     class JobNoChannel:
         def __init__(self):
             self.job_id = uuid4()
-            # channel вообще нет
 
     job = JobNoChannel()
     assert _ensure_channel(job) == "email"

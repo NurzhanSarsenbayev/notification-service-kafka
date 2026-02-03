@@ -7,9 +7,9 @@ logger = logging.getLogger(__name__)
 
 
 class WsSender(BaseSender):
-    """Отправка WebSocket сообщений (пока лог).
+    """Send WebSocket notifications (stub: logs only).
 
-    Позже можно вставить настоящий WebSocket-сервер.
+    A real WebSocket gateway can be plugged in later.
     """
 
     async def send(self, *, to: str, subject: str, body: str) -> None:

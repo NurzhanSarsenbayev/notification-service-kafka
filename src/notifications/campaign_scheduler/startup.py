@@ -22,7 +22,7 @@ async def create_db_pool() -> asyncpg.Pool:
 
 
 def create_http_client() -> httpx.AsyncClient:
-    """Создаём AsyncClient с таймаутом из настроек (если есть)."""
+    """Create an AsyncClient using a timeout from settings (if configured)."""
     timeout_seconds = getattr(settings, "scheduler_http_timeout_seconds", 5.0)
     logger.info("Creating HTTP client for scheduler, timeout=%s",
                 timeout_seconds)

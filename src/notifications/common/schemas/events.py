@@ -11,7 +11,7 @@ class EventType(str, Enum):
     CAMPAIGN_TRIGGERED = "campaign_triggered"
     USER_REGISTERED = "user_registered"
     NEW_FILM_ADDED = "new_film_added"
-    # тут же будут и другие типы: USER_REGISTERED, PASSWORD_RESET и т.д.
+    # other event types can be added here: USER_REGISTERED, PASSWORD_RESET, etc.
 
 
 class SegmentRef(BaseModel):

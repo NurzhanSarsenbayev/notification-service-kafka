@@ -12,7 +12,7 @@ class EventType(str, Enum):
     CAMPAIGN_TRIGGERED = "campaign_triggered"
 
 
-# --- payload-модели ---
+# --- payload models ---
 
 class UserRegisteredEventPayload(BaseModel):
     user_id: UUID
@@ -47,7 +47,7 @@ class CampaignTriggeredEventPayload(BaseModel):
 
 
 class BaseEvent(BaseModel):
-    """Общий каркас события (без конкретики payload)."""
+    """Base event envelope (payload-agnostic)."""
 
     event_id: UUID = Field(..., description="Unique id of the event")
     event_type: EventType = Field(..., description="Type of the event")

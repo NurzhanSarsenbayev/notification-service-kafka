@@ -16,7 +16,7 @@ class Template:
 
 
 class TemplateRepository:
-    """Работа с таблицей templates."""
+    """Access to the templates table."""
 
     def __init__(self, pool: asyncpg.Pool) -> None:
         self._pool = pool

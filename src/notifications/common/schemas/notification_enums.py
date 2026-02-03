@@ -12,7 +12,7 @@ class NotificationChannel(StrEnum):
     EMAIL = "email"
     PUSH = "push"
     WS = "ws"
-    SMS = "sms"  # зарезервировано
+    SMS = "sms"  # reserved
 
 
 class NotificationPriority(StrEnum):

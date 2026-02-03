@@ -13,46 +13,44 @@ logger = logging.getLogger(__name__)
 
 
 def _ensure_channel(job: NotificationJob) -> str:
-    """
-    Гарантированно вернуть корректный канал для записи в БД.
+    """Normalize a job channel for DB persistence.
 
-    Логика:
-    1) Если channel отсутствует → fallback "email" (MVP совместимость).
-    2) Если Enum → отдать .value.
-    3) Если строка → привести к нижнему регистру и попытаться
-       привести к NotificationChannel.
-    4) Если не удалось → fallback "email" + warning.
+    Rules:
+    1) If channel is missing -> fallback to "email" (MVP compatibility).
+    2) If Enum -> use .value.
+    3) If string -> normalize to lower-case and try to parse NotificationChannel.
+    4) If parsing fails -> fallback to "email" and log a warning.
     """
     ch = getattr(job, "channel", None)
 
-    # 1) Fallback для MVP
+    # 1) MVP fallback
     if ch is None:
         logger.warning(
-            "Job %s has no channel → fallback to 'email'",
+            "Job %s has no channel -> fallback to 'email'",
             job.job_id
         )
         return NotificationChannel.EMAIL.value
 
-    # 2) Enum → идеально
+    # 2) Enum -> .value
     if isinstance(ch, NotificationChannel):
         return ch.value
 
-    # 3) Строка → пробуем привести к enum
+    # 3) String -> normalize and try to parse enum
     if isinstance(ch, str):
         normalized = ch.strip().lower()
         try:
             return NotificationChannel(normalized).value
         except ValueError:
             logger.warning(
-                "Job %s has unknown channel '%s' → fallback to 'email'",
+                "Job %s has unknown channel '%s' -> fallback to 'email'",
                 job.job_id,
                 ch,
             )
             return NotificationChannel.EMAIL.value
 
-    # 4) Странный тип → fallback
+    # 4) Unexpected type -> fallback
     logger.error(
-        "Job %s has invalid channel type '%s' → fallback to 'email'",
+        "Job %s has invalid channel type '%s' -> fallback to 'email'",
         job.job_id,
         type(ch),
     )
@@ -68,7 +66,7 @@ async def mark_sent(
         job_id=job.job_id,
         user_id=job.user_id,
         channel=_ensure_channel(job),
-        status=NotificationStatus.SENT.value,   # 👈 .value
+        status=NotificationStatus.SENT.value,
         attempts=attempts,
         error_code=None,
         error_message=None,

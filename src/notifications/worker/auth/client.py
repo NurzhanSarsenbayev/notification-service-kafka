@@ -6,7 +6,7 @@ import logging
 
 import httpx
 
-from src.notifications.common.config import Settings  # или откуда у тебя берётся Settings
+from src.notifications.common.config import Settings
 
 logger = logging.getLogger(__name__)
 
@@ -20,12 +20,13 @@ class UserContacts:
 
 
 class AuthClient:
-    """Клиент для Auth-сервиса.
+    """Auth service client.
 
-    В бою:
-      - ходит в Auth по HTTP и возвращает реальные контакты.
-    В тестах:
-      - подменяется на FakeAuthClient через фикстуры.
+    Production:
+        - fetches real user contacts via HTTP from Auth service.
+
+    Tests:
+        - replaced with FakeAuthClient via fixtures.
     """
 
     def __init__(self, settings: Settings) -> None:
@@ -43,9 +44,8 @@ class AuthClient:
                 resp = await client.get(url)
                 data = resp.json()
         except Exception as exc:
-            # Fallback, чтобы не ломать воркер, если Auth недоступен.
             logger.warning(
-                "AuthClient: failed to fetch user %s from %s: %s — using fake contacts",
+                "AuthClient: failed to fetch user %s from %s: %s - using fake contacts",
                 user_id,
                 url,
                 exc,
@@ -61,7 +61,7 @@ class AuthClient:
 
     @staticmethod
     def _fake_contacts(user_id: UUID) -> UserContacts:
-        """MVP-режим: фейковые данные, чтобы не падать."""
+        """Demo mode: fake contacts to keep the worker self-contained."""
         fake_email = f"user-{user_id}@example.com"
         fake_push = f"push-{user_id}"
         fake_ws = f"ws-{user_id}"
