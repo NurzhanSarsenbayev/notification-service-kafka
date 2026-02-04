@@ -15,4 +15,4 @@ httpx==0.27.2
 
 croniter==2.0.3
 
-aiosmtplib
+aiosmtplib==3.0.1
