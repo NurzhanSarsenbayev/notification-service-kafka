@@ -6,7 +6,7 @@ import logging
 
 import httpx
 
-from src.notifications.common.config import Settings
+from notifications.common.config import Settings
 
 logger = logging.getLogger(__name__)
 

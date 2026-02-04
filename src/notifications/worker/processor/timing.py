@@ -4,9 +4,9 @@ import asyncio
 import logging
 from datetime import datetime, timezone
 
-from src.notifications.common.schemas import NotificationJob
-from ..repositories import NotificationDeliveryRepository
-from .status_writer import mark_expired
+from notifications.common.schemas import NotificationJob
+from notifications.worker.repositories import NotificationDeliveryRepository
+from notifications.worker.processor.status_writer import mark_expired
 
 logger = logging.getLogger(__name__)
 

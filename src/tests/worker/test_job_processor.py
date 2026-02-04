@@ -1,7 +1,7 @@
 import pytest
 
-from src.notifications.worker.processor.job_processor import JobProcessor
-from .conftest import FakeAuthClient
+from notifications.worker.processor.job_processor import JobProcessor
+from notifications.tests.worker.conftest import FakeAuthClient
 
 
 @pytest.mark.asyncio

@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.exc import IntegrityError
 
-from src.notifications.notifications_api.main import app
+from notifications.notifications_api.main import app
 
 from notifications.notifications_api.utils.dependencies import (
     get_template_repository,

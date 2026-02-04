@@ -2,19 +2,19 @@ from __future__ import annotations
 
 import logging
 
-from src.notifications.common.config import Settings
-from src.notifications.common.schemas import (
+from notifications.common.config import Settings
+from notifications.common.schemas import (
     NotificationChannel,
     NotificationJob,
     NotificationStatus,
 )
 
-from ..auth import AuthClient
-from ..dlq import DlqPublisher
-from ..repositories import NotificationDeliveryRepository, TemplateRepository
-from ..senders import EmailSender, PushSender, WsSender
-from .retry_engine import attempt_with_retries
-from .timing import handle_expiration_if_needed, wait_send_after_if_needed
+from notifications.worker.auth import AuthClient
+from notifications.worker.dlq import DlqPublisher
+from notifications.worker.repositories import NotificationDeliveryRepository, TemplateRepository
+from notifications.worker.senders import EmailSender, PushSender, WsSender
+from notifications.worker.processor.retry_engine import attempt_with_retries
+from notifications.worker.processor.timing import handle_expiration_if_needed, wait_send_after_if_needed
 
 logger = logging.getLogger(__name__)
 

@@ -4,19 +4,19 @@ import asyncio
 import logging
 import signal
 
-from .auth import AuthClient
-from src.notifications.worker.core.config import settings
-from .consumer import KafkaNotificationConsumer
-from .dlq import DlqPublisher
-from src.notifications.worker.core.logger import configure_logging
-from .processor import JobProcessor
-from .repositories import (
-    TemplateRepository,
+from notifications.worker.auth import AuthClient
+from notifications.worker.consumer import KafkaNotificationConsumer
+from notifications.worker.core.config import settings
+from notifications.worker.core.logger import configure_logging
+from notifications.worker.dlq import DlqPublisher
+from notifications.worker.processor import JobProcessor
+from notifications.worker.repositories import (
     NotificationDeliveryRepository,
+    TemplateRepository,
 )
-from .senders import EmailSender, PushSender, WsSender
+from notifications.worker.senders import EmailSender, PushSender, WsSender
+from notifications.worker.startup import create_db_pool, create_kafka_producer
 
-from .startup import create_db_pool, create_kafka_producer
 
 logger = logging.getLogger(__name__)
 

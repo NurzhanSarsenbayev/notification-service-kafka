@@ -4,10 +4,10 @@ import asyncio
 import logging
 from typing import Awaitable, Callable, Sequence
 
-from ..dlq import DlqPublisher
-from src.notifications.common.schemas import NotificationJob
-from ..repositories import NotificationDeliveryRepository
-from .status_writer import mark_sent, mark_failure
+from notifications.worker.dlq import DlqPublisher
+from notifications.common.schemas import NotificationJob
+from notifications.worker.repositories import NotificationDeliveryRepository
+from notifications.worker.processor.status_writer import mark_sent, mark_failure
 
 logger = logging.getLogger(__name__)
 

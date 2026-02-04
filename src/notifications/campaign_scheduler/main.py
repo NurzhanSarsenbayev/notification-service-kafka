@@ -3,8 +3,8 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from .core.logger import configure_logging
-from .service.scheduler_service import run_scheduler
+from notifications.campaign_scheduler.core.logger import configure_logging
+from notifications.campaign_scheduler.service.scheduler_service import run_scheduler
 
 logger = logging.getLogger(__name__)
 

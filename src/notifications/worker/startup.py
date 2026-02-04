@@ -7,7 +7,7 @@ import asyncpg
 from aiokafka import AIOKafkaProducer
 from aiokafka.errors import KafkaConnectionError
 
-from src.notifications.worker.core.config import settings
+from notifications.worker.core.config import settings
 
 logger = logging.getLogger(__name__)
 

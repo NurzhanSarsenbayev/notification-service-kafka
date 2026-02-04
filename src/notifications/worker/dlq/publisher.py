@@ -7,8 +7,8 @@ from typing import Any
 
 from aiokafka import AIOKafkaProducer
 
-from src.notifications.common.schemas import NotificationJob
-from src.notifications.common.config import Settings
+from notifications.common.schemas import NotificationJob
+from notifications.common.config import Settings
 logger = logging.getLogger(__name__)
 
 

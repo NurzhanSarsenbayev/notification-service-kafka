@@ -1,10 +1,10 @@
-from .notification_enums import (
+from notifications.common.schemas.notification_enums import (
     NotificationStatus,
     NotificationChannel,
     NotificationPriority,
 )
-from .notification_job import NotificationJob, NotificationMeta
-from .events import (
+from notifications.common.schemas.notification_job import NotificationJob, NotificationMeta
+from notifications.common.schemas.events import (
     EventType,
     EventIn,
     CampaignTriggeredEventPayload,

@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from src.notifications.common.schemas.notification_enums import (
+from notifications.common.schemas.notification_enums import (
     NotificationPriority, NotificationChannel)
 
 

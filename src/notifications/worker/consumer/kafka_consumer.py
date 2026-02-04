@@ -8,10 +8,10 @@ from typing import Any
 from aiokafka import AIOKafkaConsumer
 from aiokafka.errors import KafkaError
 
-from ..dlq import DlqPublisher
-from src.notifications.common.schemas import NotificationJob
-from src.notifications.common.config import Settings
-from ..processor import JobProcessor
+from notifications.worker.dlq import DlqPublisher
+from notifications.common.schemas import NotificationJob
+from notifications.common.config import Settings
+from notifications.worker.processor import JobProcessor
 
 logger = logging.getLogger(__name__)
 

@@ -3,11 +3,11 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timezone
 
-from src.notifications.common.schemas import (
+from notifications.common.schemas import (
     NotificationStatus,
     NotificationJob,
     NotificationChannel)
-from ..repositories import NotificationDeliveryRepository
+from notifications.worker.repositories import NotificationDeliveryRepository
 
 logger = logging.getLogger(__name__)
 

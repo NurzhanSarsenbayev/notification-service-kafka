@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
-from src.notifications.campaign_scheduler.service.scheduler_service import (
+from notifications.campaign_scheduler.service.scheduler_service import (
     is_campaign_due)
-from src.notifications.campaign_scheduler.repositories.campaigns_repo import (
+from notifications.campaign_scheduler.repositories.campaigns_repo import (
     Campaign)
 
 

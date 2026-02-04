@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from .notification_enums import NotificationChannel
+from notifications.common.schemas.notification_enums import NotificationChannel
 
 
 class EventType(str, Enum):

@@ -1,8 +1,8 @@
 import pytest
 
-from src.notifications.worker.processor.retry_engine import (
+from notifications.worker.processor.retry_engine import (
     attempt_with_retries)
-from .conftest import FakeDeliveryRepo, FakeDlqPublisher, make_notification_job
+from notifications.tests.worker.conftest import FakeDeliveryRepo, FakeDlqPublisher, make_notification_job
 
 
 @pytest.mark.asyncio

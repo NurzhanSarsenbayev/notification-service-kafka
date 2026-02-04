@@ -1,7 +1,7 @@
 from __future__ import annotations
 import logging
 
-from .base import BaseSender
+from notifications.worker.senders.base import BaseSender
 
 logger = logging.getLogger(__name__)
 

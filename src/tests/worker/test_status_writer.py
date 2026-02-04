@@ -1,7 +1,7 @@
 from uuid import uuid4
 
-from src.notifications.common.schemas import NotificationChannel
-from src.notifications.worker.processor.status_writer import _ensure_channel
+from notifications.common.schemas import NotificationChannel
+from notifications.worker.processor.status_writer import _ensure_channel
 
 
 class _DummyJob:
