@@ -69,21 +69,40 @@ The service is designed to be run locally using Docker Compose.
 ### Run
 
 ```bash
-git clone https://github.com/NurzhanSarsenbayev/notifications_sprint_1.git --> change to new link
+git clone https://github.com/NurzhanSarsenbayev/notifications_sprint_1.git
 cd notifications_sprint_1
 
 cp .env.sample .env
-docker compose infra/docker-compose.yml up --build
+docker compose --env-file .env -f infra/docker-compose.yml up --build
 ```
-### After startup:
+### After startup
+API docs: http://localhost:18100/docs
 
-API is available at: http://localhost:8000/docs
+Mailpit UI: http://localhost:18025
 
-Mailpit UI is available at: http://localhost:8025
+---
+## Quick demo (recommended)
 
-To verify the full notification flow, follow the demo guide:
+To verify the full end-to-end notification flow:
 
-👉 docs/DEMO.md
+```bash
+make up
+make demo
+```
+
+This will:
+
+- Start the full stack
+
+- Create a valid notification template
+
+- Publish a user_registered event
+
+- Deliver an email via Mailpit (demo mode)
+
+### Verify delivery in Mailpit UI:
+
+http://localhost:18025
 
 ---
 
@@ -92,6 +111,8 @@ To verify the full notification flow, follow the demo guide:
 A complete end-to-end demo is available here:
 
 👉 [`docs/DEMO.md`](docs/DEMO.md)
+
+For a quick verification, see the **Quick demo** section above.
 
 The demo walks through:
 
