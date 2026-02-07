@@ -1,5 +1,5 @@
 # Notification Service
-![CI](https://github.com/NurzhanSarsenbayev/notifications_sprint_1/actions/workflows/ci.yml/badge.svg)****
+![CI](https://github.com/NurzhanSarsenbayev/notifications_sprint_1/actions/workflows/ci.yml/badge.svg)
 
 A production-minded notification service built with FastAPI, Kafka, and PostgreSQL.
 
@@ -67,7 +67,7 @@ The service is designed to be run locally using Docker Compose.
 - Docker
 - Docker Compose
 - Make
-- 
+
 ### Run
 
 ```bash
@@ -78,9 +78,11 @@ cp .env.sample .env
 make up
 ```
 ### After startup
-API docs: http://localhost:${API_PORT}/docs
+API docs: http://localhost:18100/docs
+ (default; configurable via .env)
 
-Mailpit UI: http://localhost:${MAILPIT_UI_PORT}
+Mailpit UI: http://localhost:18025
+ (default; configurable via .env)
 
 ---
 
@@ -105,7 +107,7 @@ make health-all
 
 ## Quick demo (recommended)
 
-To verify the full end-to-end notification flow:
+### End-to-end demo
 
 ```bash
 make up
@@ -124,7 +126,9 @@ This will:
 
 ### Verify delivery in Mailpit UI:
 
-http://localhost:${MAILPIT_UI_PORT}
+http://localhost:18025
+ (default; configurable via .env)
+
 
 ---
 
@@ -145,6 +149,8 @@ The demo walks through:
 5. Triggering retry and DLQ scenarios
 
 The full demo takes ~5 minutes.
+
+Full walkthrough: 👉 docs/DEMO.md
 
 ---
 

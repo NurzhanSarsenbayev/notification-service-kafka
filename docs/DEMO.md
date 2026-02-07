@@ -26,7 +26,7 @@ make demo
 ### Verification
 Open Mailpit UI:
 
-http://localhost:${MAILPIT_UI_PORT}
+http://localhost:18025 (default; configurable via .env.sample)
 
 You should see the delivered email message.
 
