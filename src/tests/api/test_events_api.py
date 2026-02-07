@@ -3,10 +3,6 @@ import uuid
 import pytest
 from starlette.testclient import TestClient
 
-from notifications.notifications_api.main import app
-from notifications.notifications_api.services.notification_service import NotificationService
-from notifications.common.schemas import NotificationJob, NotificationMeta
-
 
 @pytest.mark.asyncio
 async def test_post_event_accepted(api_client: TestClient):
@@ -19,8 +15,8 @@ async def test_post_event_accepted(api_client: TestClient):
             "user_id": str(uuid.uuid4()),
             "registration_channel": "web",
             "locale": "ru",
-            "user_agent": "Mozilla/5.0"
-        }
+            "user_agent": "Mozilla/5.0",
+        },
     }
 
     resp = api_client.post("/api/v1/events", json=event_payload)

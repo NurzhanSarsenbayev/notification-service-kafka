@@ -85,7 +85,9 @@ class NotificationService:
                 detail=f"Invalid payload for {context}: {exc}",
             ) from exc
 
-    def _map_user_registered(self, event: BaseEvent, now: datetime) -> List[NotificationJob]:
+    def _map_user_registered(
+        self, event: BaseEvent, now: datetime
+    ) -> List[NotificationJob]:
         payload = self._parse_payload(
             event=event,
             payload_cls=UserRegisteredEventPayload,
@@ -111,7 +113,9 @@ class NotificationService:
         )
         return [job]
 
-    def _map_new_film_released(self, event: BaseEvent, now: datetime) -> List[NotificationJob]:
+    def _map_new_film_released(
+        self, event: BaseEvent, now: datetime
+    ) -> List[NotificationJob]:
         """Template for a future implementation of the 'new_film_released' event."""
         _ = self._parse_payload(
             event=event,
@@ -124,7 +128,9 @@ class NotificationService:
             detail="new_film_released notifications are not implemented in this MVP",
         )
 
-    def _map_campaign_triggered(self, event: BaseEvent, now: datetime) -> List[NotificationJob]:
+    def _map_campaign_triggered(
+        self, event: BaseEvent, now: datetime
+    ) -> List[NotificationJob]:
         """Template for a future implementation of the 'campaign_triggered' event."""
         _ = self._parse_payload(
             event=event,

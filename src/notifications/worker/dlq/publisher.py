@@ -9,6 +9,7 @@ from aiokafka import AIOKafkaProducer
 
 from notifications.common.schemas import NotificationJob
 from notifications.common.config import Settings
+
 logger = logging.getLogger(__name__)
 
 
@@ -20,9 +21,8 @@ class DlqPublisher:
         self._producer = producer
 
     async def publish_job(
-            self,
-            job: NotificationJob,
-            error_message: str | None) -> None:
+        self, job: NotificationJob, error_message: str | None
+    ) -> None:
         payload: dict[str, Any] = {
             "job": job.model_dump(mode="json"),
             "error_message": error_message,
@@ -30,10 +30,7 @@ class DlqPublisher:
         }
         await self._send(payload, key=str(job.job_id))
 
-    async def publish_raw(
-            self,
-            raw_value: bytes,
-            error_message: str | None) -> None:
+    async def publish_raw(self, raw_value: bytes, error_message: str | None) -> None:
         payload = {
             "raw_value": raw_value.decode("utf-8", errors="replace"),
             "error_message": error_message,

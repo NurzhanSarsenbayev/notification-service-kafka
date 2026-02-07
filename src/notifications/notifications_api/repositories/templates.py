@@ -1,4 +1,4 @@
-from collections.abc import Sequence 
+from collections.abc import Sequence
 from uuid import UUID, uuid4
 
 from sqlalchemy import select

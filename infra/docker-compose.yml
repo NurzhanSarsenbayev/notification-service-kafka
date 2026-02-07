@@ -7,12 +7,26 @@ services:
       context: ..
       dockerfile: ./infra/Dockerfile.api
     ports:
-      - "${API_PORT:-8000}:8000"
+      - "${API_PORT:-8000}:${UVICORN_PORT:-8000}"
+    environment:
+      UVICORN_PORT: "8000"
     depends_on:
       kafka-init:
         condition: service_completed_successfully
       notifications-db-init:
         condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import os,urllib.request; p=os.getenv('UVICORN_PORT','8000'); urllib.request.urlopen(f'http://127.0.0.1:{p}/health', timeout=2).read()",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
 
   notifications-worker:
     env_file:
@@ -25,6 +39,16 @@ services:
         condition: service_completed_successfully
       notifications-db-init:
         condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >
+          test -f /tmp/ready &&
+          python -c "import time, pathlib; p=pathlib.Path('/tmp/heartbeat'); t=float(p.read_text()) if p.exists() else 0; raise SystemExit(0 if time.time()-t < 20 else 1)"
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
 
   notifications-db:
     env_file:
@@ -55,6 +79,16 @@ services:
     depends_on:
       - notifications-api
     restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >
+          test -f /tmp/ready &&
+          python -c "import time, pathlib; p=pathlib.Path('/tmp/heartbeat'); t=float(p.read_text()) if p.exists() else 0; raise SystemExit(0 if time.time()-t < 20 else 1)"
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
 
   kafka:
     env_file:

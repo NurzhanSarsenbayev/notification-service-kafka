@@ -37,8 +37,7 @@ async def main() -> None:
                 e,
             )
             if attempt == max_attempts:
-                logger.error("DB init: giving up "
-                             "after %s attempts", max_attempts)
+                logger.error("DB init: giving up after %s attempts", max_attempts)
                 raise
             await asyncio.sleep(delay)
 

@@ -5,7 +5,9 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 from notifications.common.schemas.notification_enums import (
-    NotificationPriority, NotificationChannel)
+    NotificationPriority,
+    NotificationChannel,
+)
 
 
 class NotificationMeta(BaseModel):

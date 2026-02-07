@@ -3,7 +3,10 @@ from notifications.common.schemas.notification_enums import (
     NotificationChannel,
     NotificationPriority,
 )
-from notifications.common.schemas.notification_job import NotificationJob, NotificationMeta
+from notifications.common.schemas.notification_job import (
+    NotificationJob,
+    NotificationMeta,
+)
 from notifications.common.schemas.events import (
     EventType,
     EventIn,

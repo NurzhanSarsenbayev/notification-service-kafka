@@ -14,5 +14,3 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --no-cache-dir pytest pytest-asyncio
 
 COPY . .
-
-CMD ["pytest", "-q", "tests/worker"]

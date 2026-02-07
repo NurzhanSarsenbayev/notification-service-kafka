@@ -11,10 +11,10 @@ The system favors explicit, observable delivery semantics over fragile exactly-o
 
 - **Delivery model:** at-least-once
 - **Message duplication:** possible
-- **Duplicate side effects:** prevented via idempotent processing
+-  **External side effects (e.g., emails):** at-least-once (duplicates are possible in a crash window)
 
-The system is designed so that message re-delivery does not result in duplicated
-external side effects (such as sending multiple emails).
+The system is designed to be resumable and observable. Re-delivery may lead to repeated external side effects
+(e.g., sending the same email again) if a crash happens between sending and persisting the final delivery state.
 
 ---
 
@@ -27,8 +27,8 @@ associated with the job identifier.
 
 If a terminal delivery state already exists, the job is skipped.
 
-This ensures that repeated processing of the same job does not result
-in duplicated external side effects.
+This ensures that repeated processing of the same job does not create duplicated persistence records
+and makes delivery history observable and debuggable.
 
 ---
 
@@ -72,9 +72,9 @@ The system tolerates worker crashes and restarts.
 
 Because delivery state is persisted before and after each attempt:
 
-- re-delivered messages do not cause duplicate side effects
-- interrupted deliveries can be retried safely
 - processing can resume after failures without manual intervention
+- interrupted deliveries can be retried safely (at-least-once)
+- external side effects may be duplicated if a crash happens between "send" and persisting `SENT`
 
 ---
 

@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
+        extra="ignore",
     )
 
     # FastAPI
@@ -53,7 +54,9 @@ class Settings(BaseSettings):
 
     @property
     def retry_delays_seconds(self) -> List[float]:
-        parts = [p.strip() for p in self.retry_delays_seconds_raw.split(",") if p.strip()]
+        parts = [
+            p.strip() for p in self.retry_delays_seconds_raw.split(",") if p.strip()
+        ]
         if not parts:
             raise ValueError(
                 "RETRY_DELAYS_SECONDS_RAW is empty. Expected comma-separated numbers, e.g. '1,3,10'."

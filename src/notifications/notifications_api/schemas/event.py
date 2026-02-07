@@ -14,6 +14,7 @@ class EventType(str, Enum):
 
 # --- payload models ---
 
+
 class UserRegisteredEventPayload(BaseModel):
     user_id: UUID
     registration_channel: str

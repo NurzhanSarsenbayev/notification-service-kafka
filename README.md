@@ -76,9 +76,9 @@ cp .env.sample .env
 docker compose --env-file .env -f infra/docker-compose.yml up --build
 ```
 ### After startup
-API docs: http://localhost:18100/docs
+API docs: http://localhost:${API_PORT}/docs
 
-Mailpit UI: http://localhost:18025
+Mailpit UI: http://localhost:${MAILPIT_UI_PORT}
 
 ---
 ## Quick demo (recommended)
@@ -102,7 +102,7 @@ This will:
 
 ### Verify delivery in Mailpit UI:
 
-http://localhost:18025
+http://localhost:${MAILPIT_UI_PORT}
 
 ---
 
@@ -132,8 +132,7 @@ The full demo takes ~5 minutes.
 - Idempotency: enforced at the database level
 - Retries: enabled for transient failures with bounded attempts
 - Dead Letter Queue (DLQ): captures non-retryable failures with context
-- Crash safety: worker restarts do not cause duplicate side effects
-
+- Crash safety: resumable processing with durable attempt tracking (external side effects are at-least-once)
 ---
 
 ## Repository structure

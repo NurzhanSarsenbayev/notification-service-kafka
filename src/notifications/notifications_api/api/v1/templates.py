@@ -25,10 +25,7 @@ async def list_templates(
     limit: int = Query(100, gt=0, le=1000),
 ) -> list[TemplateRead]:
     templates = await repo.list(offset=offset, limit=limit)
-    return [
-        TemplateRead.model_validate(tpl, from_attributes=True)
-        for tpl in templates
-    ]
+    return [TemplateRead.model_validate(tpl, from_attributes=True) for tpl in templates]
 
 
 @router.post(
@@ -80,4 +77,3 @@ async def update_template(
 
     tpl = await repo.update(tpl, data)
     return TemplateRead.model_validate(tpl, from_attributes=True)
-

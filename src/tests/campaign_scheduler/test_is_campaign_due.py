@@ -1,14 +1,11 @@
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
-from notifications.campaign_scheduler.service.scheduler_service import (
-    is_campaign_due)
-from notifications.campaign_scheduler.repositories.campaigns_repo import (
-    Campaign)
+from notifications.campaign_scheduler.service.scheduler_service import is_campaign_due
+from notifications.campaign_scheduler.repositories.campaigns_repo import Campaign
 
 
 def _campaign(**kwargs) -> Campaign:
-    now = datetime.now(timezone.utc)
     defaults = dict(
         id=UUID("11111111-1111-1111-1111-111111111111"),
         template_code="test_template",
@@ -46,8 +43,6 @@ def test_due_after_cron_interval():
 
 
 def test_not_due_before_next_cron():
-    now = datetime.now(timezone.utc)
-    # last_triggered_at is 10 seconds ago, cron="* * * * *" -> not due yet
-    c = _campaign(last_triggered_at=now - timedelta(seconds=10))
-
+    now = datetime(2026, 2, 5, 11, 48, 10, tzinfo=timezone.utc)
+    c = _campaign(last_triggered_at=now - timedelta(seconds=10))  # 11:48:00
     assert is_campaign_due(c, now) is False

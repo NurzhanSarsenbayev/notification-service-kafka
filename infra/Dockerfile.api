@@ -16,6 +16,9 @@ COPY src ./src
 
 ENV PYTHONPATH=/app/src
 
+ENV UVICORN_HOST=0.0.0.0
+ENV UVICORN_PORT=8000
+
 EXPOSE 8000
 
-CMD ["uvicorn", "notifications.notifications_api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn notifications.notifications_api.main:app --host ${UVICORN_HOST} --port ${UVICORN_PORT}"]

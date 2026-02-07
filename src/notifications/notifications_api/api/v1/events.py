@@ -1,11 +1,10 @@
 from fastapi import APIRouter, Depends, status
 
-from notifications.notifications_api.schemas.event import (BaseEvent as
-                                                           Event)
+from notifications.notifications_api.schemas.event import BaseEvent as Event
 from notifications.notifications_api.services.notification_service import (
-    NotificationService)
-from notifications.notifications_api.utils.dependencies import (
-    get_notification_service)
+    NotificationService,
+)
+from notifications.notifications_api.utils.dependencies import get_notification_service
 
 router = APIRouter(prefix="/events", tags=["events"])
 

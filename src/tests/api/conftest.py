@@ -49,7 +49,7 @@ class FakeTemplateRepo:
         offset: int = 0,
         limit: int = 100,
     ) -> list[TemplateRead]:
-        return self._items[offset: offset + limit]
+        return self._items[offset : offset + limit]
 
 
 class FakeNotificationService:

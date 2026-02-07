@@ -11,10 +11,16 @@ from notifications.common.schemas import (
 
 from notifications.worker.auth import AuthClient
 from notifications.worker.dlq import DlqPublisher
-from notifications.worker.repositories import NotificationDeliveryRepository, TemplateRepository
+from notifications.worker.repositories import (
+    NotificationDeliveryRepository,
+    TemplateRepository,
+)
 from notifications.worker.senders import EmailSender, PushSender, WsSender
 from notifications.worker.processor.retry_engine import attempt_with_retries
-from notifications.worker.processor.timing import handle_expiration_if_needed, wait_send_after_if_needed
+from notifications.worker.processor.timing import (
+    handle_expiration_if_needed,
+    wait_send_after_if_needed,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +91,8 @@ class JobProcessor:
             return True
 
         if (
-            existing.status in (NotificationStatus.EXPIRED.value, NotificationStatus.FAILED.value)
+            existing.status
+            in (NotificationStatus.EXPIRED.value, NotificationStatus.FAILED.value)
             and existing.attempts >= self.settings.max_attempts
         ):
             logger.info(

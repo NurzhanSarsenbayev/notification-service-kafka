@@ -3,10 +3,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from notifications.common.db import get_db_session
 from notifications.common.kafka import kafka_publisher
-from notifications.notifications_api.repositories.templates import (
-    TemplateRepository)
+from notifications.notifications_api.repositories.templates import TemplateRepository
 from notifications.notifications_api.services.notification_service import (
-    NotificationService)
+    NotificationService,
+)
 
 
 async def get_db(

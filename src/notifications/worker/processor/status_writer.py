@@ -6,7 +6,8 @@ from datetime import datetime, timezone
 from notifications.common.schemas import (
     NotificationStatus,
     NotificationJob,
-    NotificationChannel)
+    NotificationChannel,
+)
 from notifications.worker.repositories import NotificationDeliveryRepository
 
 logger = logging.getLogger(__name__)
@@ -25,10 +26,7 @@ def _ensure_channel(job: NotificationJob) -> str:
 
     # 1) MVP fallback
     if ch is None:
-        logger.warning(
-            "Job %s has no channel -> fallback to 'email'",
-            job.job_id
-        )
+        logger.warning("Job %s has no channel -> fallback to 'email'", job.job_id)
         return NotificationChannel.EMAIL.value
 
     # 2) Enum -> .value
@@ -82,8 +80,7 @@ async def mark_failure(
     error: str,
     final: bool,
 ) -> None:
-    status = NotificationStatus.FAILED if final\
-        else NotificationStatus.RETRYING
+    status = NotificationStatus.FAILED if final else NotificationStatus.RETRYING
 
     await delivery_repo.save_status(
         job_id=job.job_id,

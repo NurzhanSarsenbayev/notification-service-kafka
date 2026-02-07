@@ -78,4 +78,7 @@ async def test_create_template_conflict(api_client):
 
     resp2 = api_client.post("/api/v1/templates", json=payload)
     assert resp2.status_code == 409
-    assert resp2.json()["detail"] == "Template with this code/locale/channel already exists"
+    assert (
+        resp2.json()["detail"]
+        == "Template with this code/locale/channel already exists"
+    )

@@ -9,12 +9,12 @@ import httpx
 from croniter import croniter
 
 from notifications.common.config import settings
+from notifications.common.health_files import clear_ready, mark_ready, heartbeat_loop
 from notifications.campaign_scheduler.repositories.campaigns_repo import (
     Campaign,
-    CampaignRepository)
-from notifications.campaign_scheduler.startup import (
-    create_db_pool,
-    create_http_client)
+    CampaignRepository,
+)
+from notifications.campaign_scheduler.startup import create_db_pool, create_http_client
 from notifications.notifications_api.schemas.event import (
     BaseEvent,
     CampaignTriggeredEventPayload,
@@ -33,8 +33,7 @@ def is_campaign_due(campaign: Campaign, now: datetime) -> bool:
     - if last_triggered_at is NULL -> first run happens immediately
     - otherwise -> compute the next run time from last_triggered_at using cron
     """
-    if (campaign.max_runs is not None
-            and campaign.runs_count >= campaign.max_runs):
+    if campaign.max_runs is not None and campaign.runs_count >= campaign.max_runs:
         return False
 
     if campaign.last_triggered_at is None:
@@ -183,14 +182,20 @@ async def run_scheduler() -> None:
         poll_interval,
     )
 
+    clear_ready()
+
     pool = await create_db_pool()
     client = create_http_client()
     repo = CampaignRepository(pool)
 
+    mark_ready()
+    hb_task = asyncio.create_task(heartbeat_loop(5.0), name="scheduler-heartbeat")
     try:
         while True:
             await _process_tick(repo, client, poll_interval)
     finally:
+        hb_task.cancel()
+        clear_ready()
         logger.info("Closing scheduler resources...")
         await client.aclose()
         await pool.close()

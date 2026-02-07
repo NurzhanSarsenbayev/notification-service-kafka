@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import httpx
 
 import asyncpg
 from aiokafka import AIOKafkaProducer
@@ -10,6 +11,10 @@ from aiokafka.errors import KafkaConnectionError
 from notifications.worker.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+
+async def create_http_client() -> httpx.AsyncClient:
+    return httpx.AsyncClient(timeout=2.0)
 
 
 async def create_db_pool() -> asyncpg.Pool:
@@ -50,14 +55,12 @@ async def create_kafka_producer() -> AIOKafkaProducer:
     max_attempts = 10
     delay_seconds = 1
 
-    producer = AIOKafkaProducer(
-        bootstrap_servers=settings.kafka_bootstrap_servers)
+    producer = AIOKafkaProducer(bootstrap_servers=settings.kafka_bootstrap_servers)
 
-    for attempt in range(1, max_attempts + 10):
+    for attempt in range(1, max_attempts + 1):
         try:
             logger.info(
-                "Starting Kafka producer (attempt %s/%s)..."
-                " bootstrap_servers=%s",
+                "Starting Kafka producer (attempt %s/%s)... bootstrap_servers=%s",
                 attempt,
                 max_attempts,
                 settings.kafka_bootstrap_servers,

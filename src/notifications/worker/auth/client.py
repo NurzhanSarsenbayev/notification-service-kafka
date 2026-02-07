@@ -29,20 +29,27 @@ class AuthClient:
         - replaced with FakeAuthClient via fixtures.
     """
 
-    def __init__(self, settings: Settings) -> None:
+    def __init__(
+        self, settings: Settings, http: httpx.AsyncClient | None = None
+    ) -> None:
         self._settings = settings
+        self._http = http
 
     async def get_user_contacts(self, user_id: UUID) -> UserContacts:
         # Demo mode: if AUTH_BASE_URL is empty/unset, do not make HTTP calls.
         if not self._settings.auth_base_url:
             return self._fake_contacts(user_id)
 
+        if self._http is None:
+            # Safety net: if not provided, fall back to fake
+            return self._fake_contacts(user_id)
+
         url = f"{self._settings.auth_base_url}/api/v1/users/{user_id}"
 
         try:
-            async with httpx.AsyncClient(timeout=2.0) as client:
-                resp = await client.get(url)
-                data = resp.json()
+            resp = await self._http.get(url)
+            resp.raise_for_status()
+            data = resp.json()
         except Exception as exc:
             logger.warning(
                 "AuthClient: failed to fetch user %s from %s: %s - using fake contacts",

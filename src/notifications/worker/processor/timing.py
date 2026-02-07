@@ -61,6 +61,5 @@ async def wait_send_after_if_needed(
     if delay <= 0:
         return
 
-    logger.info("Delaying job %s for %.2f sec until %s",
-                job.job_id, delay, target)
+    logger.info("Delaying job %s for %.2f sec until %s", job.job_id, delay, target)
     await asyncio.sleep(delay)

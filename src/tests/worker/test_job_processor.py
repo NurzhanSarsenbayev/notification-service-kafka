@@ -1,7 +1,7 @@
 import pytest
 
 from notifications.worker.processor.job_processor import JobProcessor
-from notifications.tests.worker.conftest import FakeAuthClient
+from tests.worker.conftest import FakeAuthClient
 
 
 @pytest.mark.asyncio
@@ -47,8 +47,7 @@ async def test_job_processor_happy_email(
     assert "User" in call.kwargs["body"]
 
     statuses = [
-        kwargs["status"]
-        for _, kwargs in delivery_repo.save_status.await_args_list
+        kwargs["status"] for _, kwargs in delivery_repo.save_status.await_args_list
     ]
     assert "SENT" in statuses
 

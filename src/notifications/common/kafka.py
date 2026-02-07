@@ -80,8 +80,13 @@ class KafkaNotificationJobPublisher:
 
             self._producer = producer
             self._enabled = True
-            logger.info("Kafka producer started bootstrap_servers=%s", self._bootstrap_servers)
+            logger.info(
+                "Kafka producer started bootstrap_servers=%s", self._bootstrap_servers
+            )
             return
+
+    def is_ready(self) -> bool:
+        return self._enabled and self._producer is not None
 
     async def stop(self) -> None:
         if self._producer is None:
@@ -95,7 +100,11 @@ class KafkaNotificationJobPublisher:
 
     async def publish_job(self, payload: Dict[str, Any]) -> None:
         if not self._enabled or self._producer is None:
-            logger.info("Kafka degraded mode: would publish topic=%s payload=%s", self._topic, payload)
+            logger.info(
+                "Kafka degraded mode: would publish topic=%s payload=%s",
+                self._topic,
+                payload,
+            )
             return
 
         try:

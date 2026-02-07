@@ -29,7 +29,7 @@ Wait until all services become healthy.
 Send a notification request to the API (example payload):
 
 ```bash
-curl -X POST http://localhost:${API_PORT:-8000}/api/v1/notifications \
+curl -X POST http://localhost:${API_PORT}/api/v1/notifications \
   -H "Content-Type: application/json" \
   -d '{
     "user_id": "user-1",
@@ -61,7 +61,7 @@ Worker logs will show processing progress.
 Open Mailpit UI:
 
 ```
-http://localhost:${MAILPIT_UI_PORT:-8025}
+http://localhost:${MAILPIT_UI_PORT}
 ```
 
 The notification email should appear there.

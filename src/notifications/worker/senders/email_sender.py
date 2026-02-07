@@ -1,6 +1,7 @@
 import aiosmtplib
 from email.mime.text import MIMEText
 
+
 class EmailSender:
     def __init__(self, host: str, port: int, sender: str):
         self.host = host

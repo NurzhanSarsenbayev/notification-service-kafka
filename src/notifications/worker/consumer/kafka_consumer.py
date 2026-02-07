@@ -80,19 +80,18 @@ class KafkaNotificationConsumer:
         except Exception as exc:
             logger.exception("Failed to decode message from Kafka: %s", exc)
             await self._dlq.publish_raw(
-                raw_value,
-                error_message="Invalid JSON in Kafka message")
+                raw_value, error_message="Invalid JSON in Kafka message"
+            )
             return
 
         # 2. NotificationJob validation
         try:
             job = NotificationJob.model_validate(payload)
         except Exception as exc:
-            logger.exception("Failed to validate NotificationJob payload: %s",
-                             exc)
+            logger.exception("Failed to validate NotificationJob payload: %s", exc)
             await self._dlq.publish_raw(
-                raw_value,
-                error_message="Invalid NotificationJob payload")
+                raw_value, error_message="Invalid NotificationJob payload"
+            )
             return
 
         logger.info(
