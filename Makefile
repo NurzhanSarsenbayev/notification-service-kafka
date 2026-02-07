@@ -19,7 +19,7 @@ help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
 
 install-dev: ## Install deps for local dev/tests (no Kafka)
-	pip install -r requirements-base.txt -r requirements-dev.txt
+	pip install -r requirements.txt -r requirements-dev.txt
 
 # --- Compose lifecycle ---
 up: ## Start the whole stack
@@ -97,7 +97,6 @@ fmt-check: ## Ruff format check (local)
 fmt: ## Ruff format (local)
 	ruff format .
 
-# Оставляем твой текущий docker-вариант как e2e
 test-e2e: ## Run tests in Docker (compose)
 	$(COMPOSE) run --rm notifications-api-tests
 	$(COMPOSE) run --rm notifications-worker-tests

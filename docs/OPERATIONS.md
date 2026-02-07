@@ -29,6 +29,17 @@ This section describes how to verify that core components are running.
 
 ---
 
+## Docker healthchecks
+
+Each service defines a Docker healthcheck:
+
+- API: HTTP check against `/health`
+- Worker / Scheduler: internal heartbeat-based checks
+
+Docker healthchecks are used only for observability and local diagnostics.
+They do not restart containers automatically.
+---
+
 ## Logging
 
 Logs are the primary source of operational visibility.
@@ -49,6 +60,24 @@ The following identifiers are useful for tracing a notification through the syst
 Searching logs by these identifiers allows correlating API requests,
 worker execution, and delivery outcomes.
 
+---
+## Health vs Readiness
+
+This service exposes two operational endpoints:
+
+### /health (liveness)
+
+Indicates that the process is running and able to respond to requests.
+Used for basic container liveness checks.
+
+### /ready (readiness)
+
+Indicates that the service is fully ready to process traffic.
+Checks include:
+- Database connectivity
+- Kafka producer readiness
+
+Readiness may be temporarily `false` during startup or degraded states.
 ---
 
 ## Delivery State Inspection
@@ -110,6 +139,19 @@ Mailpit is used as a local email delivery sink.
 - incorrect templates or rendered content
 - misconfigured local environment
 
+---
+
+## Useful commands
+
+```bash
+make health        # API liveness
+make ready         # API readiness
+make health-all    # All services health
+make logs-api
+make logs-worker
+make logs-scheduler
+make psql          # Connect to PostgreSQL
+```
 ---
 
 ## Common Failure Scenarios

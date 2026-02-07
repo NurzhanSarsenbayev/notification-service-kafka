@@ -1,4 +1,5 @@
 # Notification Service
+![CI](https://github.com/NurzhanSarsenbayev/notifications_sprint_1/actions/workflows/ci.yml/badge.svg)****
 
 A production-minded notification service built with FastAPI, Kafka, and PostgreSQL.
 
@@ -65,7 +66,8 @@ The service is designed to be run locally using Docker Compose.
 
 - Docker
 - Docker Compose
-
+- Make
+- 
 ### Run
 
 ```bash
@@ -73,7 +75,7 @@ git clone https://github.com/NurzhanSarsenbayev/notifications_sprint_1.git
 cd notifications_sprint_1
 
 cp .env.sample .env
-docker compose --env-file .env -f infra/docker-compose.yml up --build
+make up
 ```
 ### After startup
 API docs: http://localhost:${API_PORT}/docs
@@ -81,6 +83,26 @@ API docs: http://localhost:${API_PORT}/docs
 Mailpit UI: http://localhost:${MAILPIT_UI_PORT}
 
 ---
+
+## How to verify (2 minutes)
+
+Check liveness:
+
+```bash
+make health
+```
+### Check readiness (database + Kafka):
+
+```bash
+make ready
+```
+### Check all services:
+
+```bash
+make health-all
+```
+---
+
 ## Quick demo (recommended)
 
 To verify the full end-to-end notification flow:
@@ -155,5 +177,22 @@ This project is an MVP focused on delivery semantics:
 - no Kubernetes deployment
 
 These limitations are explicit and intentional.
+
+---
+## Quality Gate
+
+This project enforces a strict local and CI quality gate.
+
+CI (GitHub Actions):
+- Python 3.10 / 3.11 / 3.12 matrix
+- `ruff check`
+- `ruff format --check`
+- `pytest`
+
+Pre-commit hooks:
+- ruff
+- pytest
+
+All checks must be green before merging.
 
 ---
