@@ -200,5 +200,3 @@ Pre-commit hooks:
 - pytest
 
 All checks must be green before merging.
-
----

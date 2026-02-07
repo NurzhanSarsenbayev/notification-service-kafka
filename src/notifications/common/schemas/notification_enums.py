@@ -1,4 +1,7 @@
-from enum import StrEnum
+try:
+    from enum import StrEnum  # Python 3.11+
+except ImportError:  # Python 3.10
+    from strenum import StrEnum
 
 
 class NotificationStatus(StrEnum):
