@@ -1,5 +1,5 @@
 # Notification Service
-![CI](https://github.com/NurzhanSarsenbayev/notifications_sprint_1/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/NurzhanSarsenbayev/notification-service-kafka/actions/workflows/ci.yml/badge.svg)
 
 A production-minded notification service built with FastAPI, Kafka, and PostgreSQL.
 
@@ -71,7 +71,7 @@ The service is designed to be run locally using Docker Compose.
 ### Run
 
 ```bash
-git clone https://github.com/NurzhanSarsenbayev/notifications_sprint_1.git
+git clone https://github.com/NurzhanSarsenbayev/notification-service-kafka.git
 cd notifications_sprint_1
 
 cp .env.sample .env
