@@ -72,7 +72,7 @@ The service is designed to be run locally using Docker Compose.
 
 ```bash
 git clone https://github.com/NurzhanSarsenbayev/notification-service-kafka.git
-cd notifications_sprint_1
+cd notification-service-kafka
 
 cp .env.sample .env
 make up
