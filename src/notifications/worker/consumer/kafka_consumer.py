@@ -7,6 +7,7 @@ from typing import Any
 
 from aiokafka import AIOKafkaConsumer
 from aiokafka.errors import KafkaError
+from aiokafka.structs import ConsumerRecord
 
 from notifications.worker.dlq import DlqPublisher
 from notifications.common.schemas import NotificationJob
@@ -36,7 +37,7 @@ class KafkaNotificationConsumer:
             self._settings.kafka_outbox_topic,
             bootstrap_servers=self._settings.kafka_bootstrap_servers,
             group_id=self._settings.kafka_consumer_group,
-            enable_auto_commit=True,
+            enable_auto_commit=False,
             value_deserializer=lambda v: v,
         )
 
@@ -53,12 +54,24 @@ class KafkaNotificationConsumer:
                 if self._stopped.is_set():
                     logger.info("Stop flag set, breaking consumer loop")
                     break
-                await self._handle_message(msg.value)
+
+                handled = await self._handle_message(msg)
+                if handled:
+                    logger.info(
+                        "About to commit Kafka offset: topic=%s partition=%s offset=%s",
+                        msg.topic,
+                        msg.partition,
+                        msg.offset,
+                    )
+                    await self._commit_message(msg)
         except asyncio.CancelledError:
             logger.info("Kafka consumer cancelled")
             raise
         except KafkaError as err:
             logger.exception("Kafka error in consumer loop: %s", err)
+        except Exception:
+            logger.exception("Unexpected error in consumer loop")
+            raise
         finally:
             await self._stop_consumer()
 
@@ -73,16 +86,32 @@ class KafkaNotificationConsumer:
             logger.info("Kafka consumer stopped")
             self._consumer = None
 
-    async def _handle_message(self, raw_value: bytes) -> None:
+    async def _commit_message(self, msg) -> None:
+        if self._consumer is None:
+            raise RuntimeError("Kafka consumer is not initialized")
+
+        await self._consumer.commit()
+
+        logger.info(
+            "Committed Kafka offset: topic=%s partition=%s offset=%s",
+            msg.topic,
+            msg.partition,
+            msg.offset,
+        )
+
+    async def _handle_message(self, msg: ConsumerRecord) -> bool:
+        raw_value = msg.value
+
         # 1. JSON deserialization
         try:
             payload: Any = json.loads(raw_value.decode("utf-8"))
         except Exception as exc:
             logger.exception("Failed to decode message from Kafka: %s", exc)
             await self._dlq.publish_raw(
-                raw_value, error_message="Invalid JSON in Kafka message"
+                raw_value,
+                error_message="Invalid JSON in Kafka message",
             )
-            return
+            return True
 
         # 2. NotificationJob validation
         try:
@@ -90,15 +119,19 @@ class KafkaNotificationConsumer:
         except Exception as exc:
             logger.exception("Failed to validate NotificationJob payload: %s", exc)
             await self._dlq.publish_raw(
-                raw_value, error_message="Invalid NotificationJob payload"
+                raw_value,
+                error_message="Invalid NotificationJob payload",
             )
-            return
+            return True
 
         logger.info(
-            "Received job from Kafka: job_id=%s user_id=%s channel=%s",
+            "Received job from Kafka: job_id=%s user_id=%s channel=%s topic=%s partition=%s offset=%s",
             job.job_id,
             job.user_id,
             job.channel,
+            msg.topic,
+            msg.partition,
+            msg.offset,
         )
 
         # 3. Business processing
@@ -110,10 +143,12 @@ class KafkaNotificationConsumer:
                 job.job_id,
             )
             await self._dlq.publish_job(job, error_message=str(exc))
-        else:
-            logger.info(
-                "Job %s processed successfully (user_id=%s, channel=%s)",
-                job.job_id,
-                job.user_id,
-                job.channel,
-            )
+            return True
+
+        logger.info(
+            "Job %s processed successfully (user_id=%s, channel=%s)",
+            job.job_id,
+            job.user_id,
+            job.channel,
+        )
+        return True
