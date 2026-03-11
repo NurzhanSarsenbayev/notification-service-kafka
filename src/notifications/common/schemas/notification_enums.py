@@ -5,6 +5,7 @@ except ImportError:  # Python 3.10
 
 
 class NotificationStatus(StrEnum):
+    PROCESSING = "PROCESSING"
     SENT = "SENT"
     FAILED = "FAILED"
     RETRYING = "RETRYING"

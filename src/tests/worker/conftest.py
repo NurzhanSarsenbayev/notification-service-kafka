@@ -33,6 +33,7 @@ class FakeDeliveryRepo:
     def __init__(self) -> None:
         self.get_by_job_id = AsyncMock(return_value=None)
         self.save_status = AsyncMock()
+        self.try_claim_job = AsyncMock(return_value=True)
 
 
 class FakeAuthClient:

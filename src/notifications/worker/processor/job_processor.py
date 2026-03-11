@@ -67,6 +67,15 @@ class JobProcessor:
             max_send_delay_seconds=self.settings.max_send_delay_seconds,
         )
 
+        claimed = await self.delivery_repo.try_claim_job(
+            job_id=job.job_id,
+            user_id=job.user_id,
+            channel=self._normalize_channel(job.channel),
+        )
+        if not claimed:
+            logger.info("Job %s is already being processed - skipping", job.job_id)
+            return
+
         existing_attempts = existing.attempts if existing else 0
         await attempt_with_retries(
             job=job,

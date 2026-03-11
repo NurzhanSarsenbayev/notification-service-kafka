@@ -21,6 +21,7 @@ class Base(DeclarativeBase):
 
 
 class DeliveryStatus(str, Enum):
+    PROCESSING = "PROCESSING"
     SENT = "SENT"
     FAILED = "FAILED"
     RETRYING = "RETRYING"
@@ -92,6 +93,10 @@ class NotificationDelivery(Base):
 
     error_code: Mapped[str | None] = mapped_column(String(100))
     error_message: Mapped[str | None] = mapped_column(Text)
+
+    processing_started_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+    )
 
     sent_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),

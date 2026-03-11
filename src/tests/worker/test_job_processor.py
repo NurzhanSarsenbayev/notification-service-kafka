@@ -53,3 +53,33 @@ async def test_job_processor_happy_email(
 
     dlq_publisher.publish_job.assert_not_awaited()
     dlq_publisher.publish_raw.assert_not_awaited()
+
+@pytest.mark.asyncio
+async def test_job_processor_skips_when_claim_not_acquired(
+    settings,
+    template_repo,
+    delivery_repo,
+    dlq_publisher,
+    email_sender,
+    push_sender,
+    ws_sender,
+    job_email,
+):
+    auth_client = FakeAuthClient(email="user@example.com")
+    delivery_repo.try_claim_job.return_value = False
+
+    processor = JobProcessor(
+        settings=settings,
+        template_repo=template_repo,
+        delivery_repo=delivery_repo,
+        auth_client=auth_client,
+        email_sender=email_sender,
+        push_sender=push_sender,
+        ws_sender=ws_sender,
+        dlq_publisher=dlq_publisher,
+    )
+
+    await processor.handle_job(job_email)
+
+    email_sender.send.assert_not_awaited()
+    delivery_repo.save_status.assert_not_awaited()
