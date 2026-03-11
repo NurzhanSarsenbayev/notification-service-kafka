@@ -48,12 +48,12 @@ class NotificationDeliveryRepository:
         )
 
     async def try_claim_job(
-            self,
-            *,
-            job_id: UUID,
-            user_id: UUID,
-            channel: str,
-            stale_after_seconds: int = 300,
+        self,
+        *,
+        job_id: UUID,
+        user_id: UUID,
+        channel: str,
+        stale_after_seconds: int = 300,
     ) -> bool:
         now = datetime.now(timezone.utc)
         stale_before = now - timedelta(seconds=stale_after_seconds)

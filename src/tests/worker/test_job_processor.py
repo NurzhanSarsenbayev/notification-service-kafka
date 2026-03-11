@@ -54,6 +54,7 @@ async def test_job_processor_happy_email(
     dlq_publisher.publish_job.assert_not_awaited()
     dlq_publisher.publish_raw.assert_not_awaited()
 
+
 @pytest.mark.asyncio
 async def test_job_processor_skips_when_claim_not_acquired(
     settings,
