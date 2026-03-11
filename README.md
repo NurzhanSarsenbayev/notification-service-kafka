@@ -157,16 +157,18 @@ Full walkthrough: 👉 docs/DEMO.md
 ## Guarantees and trade-offs
 
 - Delivery guarantee: at-least-once
-- Idempotency: enforced at the database level
+- Idempotency: enforced at the database level for the same `job_id`
 - Kafka acknowledgment: explicit manual offset commit after handling
+- Processing claim: the worker uses a database-backed `PROCESSING` claim to reduce concurrent duplicate handling of the same job
 - Retries: enabled for transient failures with bounded attempts
 - Dead Letter Queue (DLQ): captures non-retryable failures with context
-- Crash safety: resumable processing with durable attempt tracking (external side effects are at-least-once)
+- Crash safety: resumable processing with durable attempt tracking (external side effects are still at-least-once)
 
-The worker uses explicit manual Kafka offset commits after message handling, 
-which gives tighter control over acknowledgment timing than auto-commit. 
-This improves alignment between processing completion and Kafka acknowledgment, 
-but the system still provides at-least-once semantics rather than exactly-once guarantees.
+The worker uses explicit manual Kafka offset commits after message handling, which gives tighter control over acknowledgment 
+timing than auto-commit. A database-backed `PROCESSING` claim reduces the risk of multiple workers starting the same job concurrently. 
+These mechanisms improve worker-side coordination, but the system still provides at-least-once semantics rather than exactly-once guarantees.
+
+Почему так лучше:
 ---
 
 ## Repository structure
